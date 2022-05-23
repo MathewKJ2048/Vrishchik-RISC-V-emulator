@@ -1,21 +1,15 @@
 package compiler;
 
+import processor.Code;
+
 import java.nio.file.*;
 import java.util.*;
 
 public class Compiler
 {
-    private int memory_start_data;
-    private int data_current;
-    private int memory_start_code;
-    private int code_current;
-    public int get_memory_start_data(){return memory_start_data;}
-    public int get_memory_start_code(){return memory_start_code;}
-    private List<Line> l;
-    //private StringBuilder transcript;
-    
-    //private static final String separator = "-----------------------------------------------------------------";
-
+    private static int data_current;
+    private static int code_current;
+    private static Source_stream raw;
     public static class Transcript
     {
         StringBuilder labels;
@@ -33,6 +27,15 @@ public class Compiler
         }
         public String get_labels()
         {
+            this.labels = new StringBuilder();
+            this.labels.append("\ndata labels:\n");
+            for (Label label : l_ld) {
+                transcript.labels.append("\n").append(label.name).append(" refers to data location: ").append(label.address);
+            }
+            this.labels.append("\ncode labels:\n");
+            for (Label label : l_lc) {
+                transcript.labels.append("\n").append(label.name).append(" refers to PC location: ").append(label.address);
+            }
             return this.labels.toString();
         }
         public String get_scrubbed_code()
@@ -52,7 +55,7 @@ public class Compiler
             return this.code.toString();
         }
     }
-    Transcript transcript;
+    private static Transcript transcript;
     
     private static class Label
     {
@@ -64,18 +67,18 @@ public class Compiler
             this.address = address;
         }
     }
-    public int get_address_code(String name)
+    public static int get_address_code(String name)
     {
         for (Label label : l_lc) if (label.name.equals(name)) return label.address;
         return -1;
     }
-    public int get_address_data(String name)
+    public static int get_address_data(String name)
     {
         for (Label label : l_ld) if (label.name.equals(name)) return label.address;
         return -1;
     }
-    private List<Label> l_ld;
-    private List<Label> l_lc;
+    private static List<Label> l_ld;
+    private static List<Label> l_lc;
     private static class Instruction
     {
         String contents;
@@ -88,15 +91,9 @@ public class Compiler
             this.comment = comment;
         }
     }
-    private List<Instruction> l_pc;
+    private static List<Instruction> l_pc;
     
-    private static class Line
-    {
-        String contents;
-        int number;
-    }
-    
-    private class Source_stream
+    private static class Source_stream
     {
         private final StringBuilder stream;
         private final List<Integer> numbers;
@@ -104,6 +101,23 @@ public class Compiler
         {
             stream = new StringBuilder();
             numbers = new ArrayList<>();
+        }
+        int length()
+        {
+            return numbers.size();
+        }
+        void delete(int i1, int i2) //i1 inclusive, i2 exclusive
+        {
+            stream.delete(i1,i2);
+            numbers.subList(i1,i2).clear();
+        }
+        int line_end(int from_index) // returns end of current line
+        {
+            for(int i=from_index;i<numbers.size()-1;i++)
+            {
+                if(numbers.get(i+1)!=numbers.get(i))return i;
+            }
+            return stream.length()-1;  // assumes that line ends at end of stream
         }
         void append(String s, int n)
         {
@@ -130,28 +144,22 @@ public class Compiler
             }
         }
     }
-    private Source_stream code_section;
-    private Source_stream data_section;
-    
-    public Compiler(int memory_start_data, int memory_start_code)
+    private static Source_stream code_section;
+    private static Source_stream data_section;
+
+    private static void reset()
     {
-        set(memory_start_data, memory_start_code);
+        transcript = new Transcript();
+        data_current = 0;
+        code_current = 0;
+        raw = new Source_stream();
+        code_section = new Source_stream();
+        data_section = new Source_stream();
+        l_ld = new ArrayList<>();
+        l_lc = new ArrayList<>();
+        l_pc = new ArrayList<>();
     }
-    private void set(int memory_start_data, int memory_start_code)
-    {
-        this.transcript = new Transcript();
-        this.memory_start_data = memory_start_data;
-        this.memory_start_code = memory_start_code;
-        this.data_current = memory_start_data;
-        this.code_current = memory_start_code;
-        this.l = new ArrayList<>();
-        this.code_section = new Source_stream();
-        this.data_section = new Source_stream();
-        this.l_ld = new ArrayList<>();
-        this.l_lc = new ArrayList<>();
-        this.l_pc = new ArrayList<>();
-    }
-    private void check_clashing_labels()throws Exception
+    private static void check_clashing_labels()throws Exception
     {
         for(int i=0;i<l_lc.size();i++)
         {
@@ -172,42 +180,33 @@ public class Compiler
             }
         }
     }
-    public Transcript get_transcript()
+    public static Transcript get_transcript()
     {
-        return this.transcript;
+        return transcript;
     }
 
-    public void compile(Path source, Path binary) throws Exception
+    public static void compile(Path source, Path binary, boolean write) throws Exception
     {
+        reset();
         List<String> l_raw = Files.readAllLines(source);
-        this.l = new ArrayList<>();
         for(int i = 0;i< l_raw.size();i++)
         {
-            Line li = new Line();
-            li.number = i+1;
-            li.contents = l_raw.get(i);
-            l.add(li);
+            raw.append(l_raw.get(i)+Syntax.WHITESPACE,i+1);
         }
-        log(this.transcript.code);
         scrub();
-        log(this.transcript.scrubbed_code);
+        raw.log(transcript.scrubbed_code);
         locate_blocs();
-        process_data(this.transcript.compilation);
-        process_code(this.transcript.compilation);
-        this.transcript.labels.append("\ndata labels:\n");
-        for (Label label : l_ld) {
-            this.transcript.labels.append("\n").append(label.name).append(" refers to data location: ").append(label.address);
-        }
-        this.transcript.labels.append("\ncode labels:\n");
-        for (Label label : l_lc) {
-            this.transcript.labels.append("\n").append(label.name).append(" refers to PC location: ").append(label.address);
-        }
-        this.transcript.binary.append("\nPC\t|              code              |purpose");
+        process_data(transcript.compilation);
+        process_code(transcript.compilation);
+
+        transcript.binary.append("\nPC\t|              code              |purpose");
 
         for (Instruction instruction : l_pc) {
-            this.transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|").append(instruction.comment);
+            transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|").append(instruction.comment);
         }
         //writing binary file
+        // this occurs iff no syntax errors are found in the source file
+        if(!write)return;
         byte[] b_array = new byte[l_pc.size()*4];
         for(int i=0;i<l_pc.size();i++)
         {
@@ -221,149 +220,103 @@ public class Compiler
         }
         Files.write(binary, b_array);
     }
-    public static String foo(byte b)
-    {
-        String s = "";
-        for(int i=7;i>=0;i--)
-        {
-            int n = (1<<i)&((int)b);
-            if(n==0)s+='0';
-            else s+='1';
-        }
-        return s;
-    }
-    private void scrub()
+
+    private static void scrub() throws Exception
     {
         remove_multi_line_comments();
         remove_single_line_comments();
-        replace_tab_with_space();
-        trim();
-        remove_empty_lines();
     }
-    private void remove_multi_line_comments()
-    {
-        boolean f = false;
-        for(int i = 0; i<l.size(); i++)
+    private static void remove_multi_line_comments() throws Exception {
+        /*
+        logic
+        single line comments start with #*
+        unless it is /#*
+        in which case, we ignore it
+        once such a #* has been located, everything from it to next "*#" is removed
+         */
+        List<Integer> start = new ArrayList<>();
+        List<Integer> end = new ArrayList<>();
+        int id = 0;
+        while(true) {
+            int s = raw.stream.indexOf(Syntax.MULTI_LINE_START, id);
+            if (s == -1) break;
+            id = s + Syntax.MULTI_LINE_END.length() - 1 + 1;
+            if (s != 0 && raw.stream.charAt(s - 1) == '\\') {
+                System.out.println("encountered");
+                continue;
+            }
+            int e = raw.stream.indexOf(Syntax.MULTI_LINE_END, id);
+            if (e == -1) throw new Exception("Unterminated multi-line comment");
+            id = e + Syntax.MULTI_LINE_END.length() - 1 + 1;
+            start.add(s);
+            end.add(e + Syntax.MULTI_LINE_END.length() - 1);
+        }
+        for(int i=start.size()-1;i>=0;i--)
         {
-            String c = l.get(i).contents;
-            int start = c.indexOf(Syntax.MULTI_LINE_START);
-            int end = c.indexOf(Syntax.MULTI_LINE_END);
-            int size_start = Syntax.MULTI_LINE_START.length();
-            int size_end = Syntax.MULTI_LINE_END.length();
-            if(f && end==-1)
-            {
-                l.get(i).contents = "";
-            }
-            if(start == -1 && end == -1)
-            {
-                continue;   
-            }
-            else if(start != -1 && end == -1)
-            {
-                f = true;
-                l.get(i).contents = c.substring(0,start);
-            }
-            else if(start == -1 && end != -1)
-            {
-                f = false;
-                l.get(i).contents = c.substring(end +size_end);
-            }
-            else
-            {
-                int next_end = c.indexOf(Syntax.MULTI_LINE_END, start);
-                if(next_end != -1)
-                {
-                    l.get(i).contents = c.substring(0,start)+c.substring(end+size_end);
-                    i--;
-                }
-                else
-                {
-                    f=true;
-                    l.get(i).contents = c.substring(end +size_end,start);
-                }
-            }
+            //System.out.println("start:"+start.get(i)+"\tend:"+end.get(i));
+            raw.delete(start.get(i),end.get(i)+1);
         }
     }
-    private void remove_single_line_comments()
+    private static void remove_single_line_comments()
     {
-        for (Line line : l) {
-            String c = line.contents;
-            int start = c.indexOf(Syntax.SINGLE_LINE);
-            if (start != -1) {
-                line.contents = c.substring(0, start);
-            }
-        }
-    }
-    private void remove_empty_lines()
-    {
-        for(int i=0;i<l.size();i++)
+        /*
+        logic
+        single line comments start with #
+        unless it is /#
+        (multi-line comments are removed first, so no '#*'s are encountered
+        in which case, we ignore it
+        once such a # has been located, everything from it to next '\n' is removed
+        '\n' is not found in raw, so we need to find where the line number changes
+         */
+        List<Integer> start = new ArrayList<>();
+        List<Integer> end = new ArrayList<>();
+        int id = 0;
+        while(true)
         {
-            if(l.get(i).contents.equals(""))
-            {
-                l.remove(i);
-                i--;
-            }
+            int s = raw.stream.indexOf(Syntax.SINGLE_LINE,id);
+            if(s==-1)break;
+            id=s+Syntax.SINGLE_LINE.length()-1+1;
+            if(s!=0 && raw.stream.charAt(s-1)=='\\')continue;
+            start.add(s);
+            end.add(raw.line_end(s+Syntax.SINGLE_LINE.length()-1));
+        }
+        for(int i=start.size()-1;i>=0;i--)
+        {
+            raw.delete(start.get(i),end.get(i)+1);
         }
     }
-    private void replace_tab_with_space()
+
+    private static void locate_blocs() throws Exception
     {
-        for (Line line : l) {
-            StringBuilder s = new StringBuilder();
-            String c = line.contents;
-            for (int j = 0; j < c.length(); j++) {
-                char d = c.charAt(j);
-                if (d == '\t') s.append(Syntax.WHITESPACE);
-                else s.append(d);
-            }
-            line.contents = s.toString();
-        }
-    }
-    private void trim()
-    {
-        for (Line line : l) {
-            String c = line.contents;
-            c = c.trim();
-            line.contents = c;
-        }
-    }
-    public void log(StringBuilder transcript)
-    {
-        for (Line line : l) {
-            transcript.append("\n").append(line.number).append("\t|").append(line.contents).append("|");
-        }
-    }
-    private void locate_blocs() throws Exception
-    {
-        Source_stream source_full = new Source_stream();
-        for (Line line : l) {
-            source_full.append(line.contents + Syntax.WHITESPACE, line.number);
-        }
-        
-        int data_start = Syntax.DATA.start_of_first_instance_in(source_full.stream());
-        int data_end = Syntax.DATA.end_of_first_instance_in(source_full.stream());
-        int code_start = Syntax.CODE.start_of_first_instance_in(source_full.stream());
-        int code_end = Syntax.CODE.end_of_first_instance_in(source_full.stream());
+        /*
+        locates the .code and .data sections
+        enters the data in code_section and data_section
+         */
+        int data_start = Syntax.DATA.start_of_first_instance_in(raw.stream());
+        int data_end = Syntax.DATA.end_of_first_instance_in(raw.stream());
+        int code_start = Syntax.CODE.start_of_first_instance_in(raw.stream());
+        int code_end = Syntax.CODE.end_of_first_instance_in(raw.stream());
         if(code_start == -1)throw new Exception("missing code");
         if(data_start == -1)//no data segment
         {
-            for(int i=code_end;i<source_full.stream.length();i++)code_section.append(source_full.stream.charAt(i)+"",source_full.numbers.get(i));
+            for(int i=code_end;i<raw.stream.length();i++)code_section.append(raw.stream.charAt(i)+"",raw.numbers.get(i));
         }
         else
         {
             if(data_start < code_start)//data section before code section
             {
-                for(int i=data_end;i<code_start;i++)data_section.append(source_full.stream.charAt(i)+"",source_full.numbers.get(i));
-                for(int i=code_end;i<source_full.stream.length();i++)code_section.append(source_full.stream.charAt(i)+"",source_full.numbers.get(i));
+                for(int i=data_end;i<code_start;i++)data_section.append(raw.stream.charAt(i)+"",raw.numbers.get(i));
+                for(int i=code_end;i<raw.stream.length();i++)code_section.append(raw.stream.charAt(i)+"",raw.numbers.get(i));
             }
             else if(code_start < data_start)// code section before data section
             {
-                for(int i=code_end;i<data_start;i++)code_section.append(source_full.stream.charAt(i)+"",source_full.numbers.get(i));
-                for(int i=data_end;i<source_full.stream.length();i++)data_section.append(source_full.stream.charAt(i)+"",source_full.numbers.get(i));
+                for(int i=code_end;i<data_start;i++)code_section.append(raw.stream.charAt(i)+"",raw.numbers.get(i));
+                for(int i=data_end;i<raw.stream.length();i++)data_section.append(raw.stream.charAt(i)+"",raw.numbers.get(i));
             }
             else throw new Exception("Coinciding section error: unable to tell data and code apart");
         }
     }
-    private void process_data(StringBuilder transcript) throws Exception
+    private static void process_data(StringBuilder transcript) throws Exception
     {
         transcript.append("\n"+"data section: ");
         if(data_section.stream.length()==0)return;
@@ -376,7 +329,7 @@ public class Compiler
                 {
                     if(!Syntax.is_valid_label(t))throw new Exception("Incorrect identifier '"+t.substring(0,t.length()-1)+"' for label in line "+data_section.get_number(sc.start()));
                     transcript.append("\n" + "label identified: ").append(t);
-                    this.l_ld.add(new Label(t, data_current));
+                    l_ld.add(new Label(t.substring(0,t.length()-1), data_current));
                 }
                 else if(Syntax.is_data_type(t))
                 {
@@ -493,7 +446,7 @@ public class Compiler
             }
         transcript.append("\n");
     }
-    private void identify_code_labels(StringBuilder transcript) throws Exception
+    private static void identify_code_labels(StringBuilder transcript) throws Exception
     {
         Parser sc = new Parser(code_section.stream());
         int PC = code_current;
@@ -512,7 +465,7 @@ public class Compiler
             }
         }
     }
-    private void jump_to_main(StringBuilder transcript) throws Exception {
+    private static void jump_to_main(StringBuilder transcript) throws Exception {
         boolean main_present = false;
         for (Label item : l_lc) {
             if (Syntax.MAIN.contains(item.name)) {
@@ -524,7 +477,7 @@ public class Compiler
         }
         if(!main_present)transcript.append("\nWARNING: no main label found");
     }
-    private long process_immediate(String imm,Parser sc,StringBuilder transcript) throws Exception
+    private static long process_immediate(String imm,Parser sc,StringBuilder transcript) throws Exception
     {
         long value;
         try
@@ -552,14 +505,14 @@ public class Compiler
         }
         return value;
     }
-    private int process_register(String r, Parser sc, String desc, StringBuilder transcript) throws  Exception
+    private static int process_register(String r, Parser sc, String desc, StringBuilder transcript) throws  Exception
     {
         transcript.append("\n"+desc+" register: ").append(r);
         int r_add = Syntax.address_of_register(r);
         if(r_add == -1)throw new Exception("register '"+r+"' in line "+code_section.numbers.get(sc.start())+" does not exist");
         return r_add;
     }
-    private void process_code(StringBuilder transcript) throws Exception
+    private static void process_code(StringBuilder transcript) throws Exception
     {
         transcript.append("\n"+"code section: ");
         identify_code_labels(transcript);
@@ -682,15 +635,18 @@ public class Compiler
                         }
                         else if(Syntax.SLLI.contains(token))
                         {
-                            l_pc.add(new Instruction(Binary.slli(src2_add, src1_add, value), code_current, Syntax.SLLI.words[0]));
+                            if(value>=0)l_pc.add(new Instruction(Binary.slli(src2_add, src1_add, value), code_current, Syntax.SLLI.words[0]));
+                            else l_pc.add(new Instruction(Binary.srli(src2_add, src1_add, -value), code_current, Syntax.SRLI.words[0]));
                         }
                         else if(Syntax.SRLI.contains(token))
                         {
-                            l_pc.add(new Instruction(Binary.srli(src2_add, src1_add, value), code_current, Syntax.SRLI.words[0]));
+                            if(value>=0)l_pc.add(new Instruction(Binary.srli(src2_add, src1_add, value), code_current, Syntax.SRLI.words[0]));
+                            else l_pc.add(new Instruction(Binary.slli(src2_add, src1_add, -value), code_current, Syntax.SLLI.words[0]));
                         }
                         else if(Syntax.SRAI.contains(token))
                         {
-                            l_pc.add(new Instruction(Binary.srai(src2_add, src1_add, value), code_current, Syntax.SRAI.words[0]));
+                            if(value>=0)l_pc.add(new Instruction(Binary.srai(src2_add, src1_add, value), code_current, Syntax.SRAI.words[0]));
+                            else l_pc.add(new Instruction(Binary.slli(src2_add, src1_add, -value), code_current, Syntax.SLLI.words[0]));
                         }
                         else if(Syntax.BEQ.contains(token))
                         {
@@ -786,11 +742,11 @@ public class Compiler
                         }
                         else if(Syntax.SB.contains(token))
                         {
-                            l_pc.add(new Instruction(Binary.sw(r_o_add, r_c_add, immediate), code_current, Syntax.SB.words[0]));
+                            l_pc.add(new Instruction(Binary.sb(r_o_add, r_c_add, immediate), code_current, Syntax.SB.words[0]));
                         }
                         else if(Syntax.SH.contains(token))
                         {
-                            l_pc.add(new Instruction(Binary.sw(r_o_add, r_c_add, immediate), code_current, Syntax.SH.words[0]));
+                            l_pc.add(new Instruction(Binary.sh(r_o_add, r_c_add, immediate), code_current, Syntax.SH.words[0]));
                         }
                         else throw new Exception("command type mismatch in line "+code_section.numbers.get(sc.start()));
                         code_current+=4*Syntax.get_n_of_command(token);
@@ -1020,7 +976,7 @@ public class Compiler
                             throw new Exception(e.getMessage()+"\nimproper arguments in line "+code_section.numbers.get(sc.start()));
                         }
                     }
-                    else if(Syntax.JALR.contains(token))
+                    else if(Syntax.JALR.contains(token))//TODO Look into this
                     {
                         // r or r,i(r)
                         try
@@ -1045,7 +1001,7 @@ public class Compiler
                             else
                             {
                                 src_add = r_c_add;
-                            }
+                            }//TODO look into whether this needs to be relative
                             l_pc.add(new Instruction(Binary.jalr(src_add,dest_add,immediate-code_current), code_current,Syntax.JALR.words[0]));
                             code_current+=4*Syntax.get_n_of_command(token);
                         }

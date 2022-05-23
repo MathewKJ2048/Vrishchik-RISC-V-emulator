@@ -386,6 +386,11 @@ public class Syntax
         for(Base b: bases)if(b.contains_id(num))return b.b;
         return DEFAULT_BASE.b;
     }
+    public static String get_id_of_base(int b) throws Exception
+    {
+        for(Base bs : bases)if(bs.b==b)return bs.id[0];
+        throw new Exception("Unidentified base");
+    }
 
     /*
     rules for identifiers:
@@ -462,6 +467,7 @@ public class Syntax
         l.add(new Escape_sequence('v',11));//vertical tab
         l.add(new Escape_sequence('?',63));//question mark
         l.add(new Escape_sequence('a',7));//bell
+        l.add(new Escape_sequence('#','#'));//hash
         //l.add(new Escape_sequence('',));
         return l;
     }
