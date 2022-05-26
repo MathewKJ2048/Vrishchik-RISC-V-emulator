@@ -1,1 +1,19 @@
+use config files with xml
+write decompiler
+ECALLs (come up with calling codes)
+pipelining
+data forwarding
 
+GUI:
+integrate JTattoo
+integrate seaglass
+font size adjustor
+info revamp
+button placement
+step-execution
+
+Documentation:
+features
+general syntax
+command syntax
+example programs
