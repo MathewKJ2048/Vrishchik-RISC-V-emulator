@@ -8,10 +8,12 @@ U type
 J type
 
 GUI:
-font size adjustor
+font adjustor
 info revamp
 button placement
 step-execution
+memory viewing
+decompiling, pointing
 
 Documentation:
 features
