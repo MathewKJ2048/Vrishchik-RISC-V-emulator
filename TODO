@@ -1,8 +1,11 @@
-use config files with xml
-write decompiler
+use config files with json
 ECALLs (come up with calling codes)
 pipelining
 data forwarding
+
+Decompiler:
+U type
+J type
 
 GUI:
 integrate JTattoo
@@ -17,3 +20,4 @@ features
 general syntax
 command syntax
 example programs
+guide to source code
