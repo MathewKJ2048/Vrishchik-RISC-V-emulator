@@ -110,7 +110,7 @@ public class GUI_RISCV extends JFrame
     private String memorySize;
     private JTabbedPane tabbedPane1;
     private JPanel mainPanel;
-    private JPanel aboutTab;
+    private JPanel infoTab;
     private JPanel compileTab;
     private JPanel executionTab;
     private JPanel DataTab;
@@ -127,8 +127,6 @@ public class GUI_RISCV extends JFrame
     private JTextField compileFilenameTextField;
     private JComboBox memoryFormatComboBox;
     private JComboBox registerFormatComboBox;
-    private JTextArea GNUGENERALPUBLICLICENSETextArea;
-    private JTextArea authorsVBharadwajMathewTextArea;
     private JTextField directoryTextField;
     private JButton directoryChangeButton;
     private JPanel compileChooserPanel;
@@ -158,6 +156,9 @@ public class GUI_RISCV extends JFrame
     private JTextArea REDACTEDTextArea;
     private JTextArea comingSoonTextArea1;
     private JTextArea thereMightHaveBeenTextArea;
+    private JRadioButton createBinaryRadioButton;
+    private JComboBox LFComboBox;
+    private JButton resetButton;
     private JButton filetypeChangeButton;
 
     public GUI_RISCV(String title)
@@ -200,23 +201,27 @@ public class GUI_RISCV extends JFrame
             }
         });
         compileButton.addActionListener(e -> {
-            compiler.Compiler c = new compiler.Compiler(0,0);
+            if(compilation_source_file==null)
+            {
+                JOptionPane.showMessageDialog(compileTab,"No file chosen","Error",JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             String name = compilation_source_file.getName();
             name = name.substring(0,name.indexOf("."+filetypeTextField.getText()));
             String error = "";
             boolean is_correct = true;
             try {
-                c.compile(Paths.get(compilation_source_file.getAbsolutePath()), Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin"));
+                compiler.Compiler.compile(Paths.get(compilation_source_file.getAbsolutePath()), Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin"),createBinaryRadioButton.isSelected());
             }
             catch(Exception ex)
             {
                 error = ex.getMessage();
                 is_correct = false;
             }
-            sourceTextArea.setText(c.get_transcript().get_code());
-            transcriptTextArea.setText(c.get_transcript().get_compilation());
-            binaryTextArea.setText(c.get_transcript().get_binary());
-            labelsTextArea.setText(c.get_transcript().get_labels());
+            sourceTextArea.setText(compiler.Compiler.get_transcript().get_code());
+            transcriptTextArea.setText(compiler.Compiler.get_transcript().get_compilation());
+            binaryTextArea.setText(compiler.Compiler.get_transcript().get_binary());
+            labelsTextArea.setText(compiler.Compiler.get_transcript().get_labels());
             if(!is_correct)
             {
                 JOptionPane.showMessageDialog(compileTab,error,"Error",JOptionPane.ERROR_MESSAGE);
@@ -301,6 +306,46 @@ public class GUI_RISCV extends JFrame
                 else if(ct==34) clearRegistersButton.setText("here goes");
                 else if(ct==35) main.dispose();
                 ct++;
+            }
+        });
+        LFComboBox.addActionListener(e -> {
+            try
+            {
+                String laf = (String)LFComboBox.getSelectedItem();
+                if(laf.equals("Acryl"))UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
+                else if(laf.equals("Aero"))UIManager.setLookAndFeel("com.jtattoo.plaf.aero.AeroLookAndFeel");
+                else if(laf.equals("Aluminum"))UIManager.setLookAndFeel("com.jtattoo.plaf.aluminium.AluminiumLookAndFeel");
+                else if(laf.equals("Bernstein"))UIManager.setLookAndFeel("com.jtattoo.plaf.bernstein.BernsteinLookAndFeel");
+                else if(laf.equals("Fast"))UIManager.setLookAndFeel("com.jtattoo.plaf.fast.FastLookAndFeel");
+                else if(laf.equals("Graphite"))UIManager.setLookAndFeel("com.jtattoo.plaf.graphite.GraphiteLookAndFeel");
+                else if(laf.equals("Hifi"))UIManager.setLookAndFeel("com.jtattoo.plaf.hifi.HiFiLookAndFeel");
+                else if(laf.equals("Luna"))UIManager.setLookAndFeel("com.jtattoo.plaf.luna.LunaLookAndFeel");
+                else if(laf.equals("McWin"))UIManager.setLookAndFeel("com.jtattoo.plaf.mcwin.McWinLookAndFeel");
+                else if(laf.equals("Michaelsoft Binbows"))UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+                else if(laf.equals("Mint"))UIManager.setLookAndFeel("com.jtattoo.plaf.mint.MintLookAndFeel");
+                else if(laf.equals("Motif"))UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+                else if(laf.equals("Nimbus (default)"))UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                else if(laf.equals("Noire"))UIManager.setLookAndFeel("com.jtattoo.plaf.noire.NoireLookAndFeel");
+                else if(laf.equals("Smart"))UIManager.setLookAndFeel("com.jtattoo.plaf.smart.SmartLookAndFeel");
+                else if(laf.equals("Texture"))UIManager.setLookAndFeel("com.jtattoo.plaf.texture.TextureLookAndFeel");
+
+            }
+            catch (Exception ex)
+            {
+                JOptionPane.showMessageDialog(LFComboBox,ex.getStackTrace(),"Look and Feel not found",JOptionPane.ERROR_MESSAGE);
+            }
+            SwingUtilities.updateComponentTreeUI(main);
+        });
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                compilation_source_file = null;
+                compileFilenameTextField.setText("");
+                sourceTextArea.setText("");
+                binaryTextArea.setText("");
+                transcriptTextArea.setText("");
+                labelsTextArea.setText("");
+                compiler.Compiler.reset();
             }
         });
     }
