@@ -185,6 +185,7 @@ public class Main
         {
             int val = sc.nextInt();
             System.out.println("SIGNED:");
+            /*
             System.out.println("bin:"+compiler.Binary.convert(val,true,2));
             System.out.println("oct:"+compiler.Binary.convert(val,true,8));
             System.out.println("dec:"+compiler.Binary.convert(val,true,10));
@@ -194,6 +195,8 @@ public class Main
             System.out.println("oct:"+compiler.Binary.convert(val,false,8));
             System.out.println("dec:"+compiler.Binary.convert(val,false,10));
             System.out.println("hex:"+compiler.Binary.convert(val,false,16));
+            */
+
         }
     }
     public static void from_bin_check()

@@ -8,18 +8,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /*
 TODO look into improper rendering of nimbus, metal and others
+TODO check to ensure overwriting does not occur for file
+TODO look into the exact function of "load"
  */
 
 public class GUI_RISCV extends JFrame
@@ -76,6 +75,8 @@ public class GUI_RISCV extends JFrame
         this.directoryTextField.setText(default_directory.getAbsolutePath());
         this.LFComboBox.setSelectedItem(look_and_feel);
         setRegisters();
+        this.memorySizeComboBox.setSelectedItem("word");
+        setMemory();
     }
     public static void load_preferences()
     {
@@ -136,7 +137,7 @@ public class GUI_RISCV extends JFrame
         StringBuilder b = new StringBuilder();
         for(int i=0;i<32;i++)
         {
-            int value = processor.Processor.get_register(i);
+            int value = processor.Processor.register(i);
             String option = (String) this.registerFormatComboBox.getSelectedItem();
             String s;
             if(option.equals("ASCII"))
@@ -152,11 +153,46 @@ public class GUI_RISCV extends JFrame
                 else if(option.equals("decimal"))base=10;
                 else if(option.equals("hexadecimal"))base=16;
                 if(base==-1)this.registersTextArea.setText("Unrecognized base");
-                s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base);
+                s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base,32); //register size is always 32 bits
             }
             b.append("Register "+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
         }
         this.registersTextArea.setText(b.toString());
+    }
+    private void setMemory()
+    {
+        int size = 1;
+        if(memorySizeComboBox.getSelectedItem().equals("half"))size=2;
+        else if(memorySizeComboBox.getSelectedItem().equals("word"))size=4;
+        StringBuilder b = new StringBuilder();
+        for(int i=0;i<processor.Processor.get_memory_size()/size;i++)
+        {
+            int value=0;
+            for(int j=0;j<size;j++)
+            {
+                value=value<<4;
+                value+=processor.Processor.memory(size*i+j);
+            }
+            String option = (String) this.memoryFormatComboBox.getSelectedItem();
+            String s;
+            if(option.equals("ASCII"))
+            {
+                if(value>=0 && value<=Character.MAX_VALUE && compiler.Syntax.is_printable_ASCII((char)value))s=""+(char)(value);
+                else s = ""+value;
+            }
+            else
+            {
+                int base = -1;
+                if(option.equals("binary"))base=2;
+                else if(option.equals("octal"))base=8;
+                else if(option.equals("decimal"))base=10;
+                else if(option.equals("hexadecimal"))base=16;
+                if(base==-1)this.memoryTextArea.setText("Unrecognized base");
+                s = compiler.Binary.convert(value,memorySignedRadioButton.isSelected(),base,8*size);
+            }
+            b.append("["+(size*i+size-1)+":"+(size*i)+"]\t"+s+"\n");
+        }
+        memoryTextArea.setText(b.toString());
     }
     public GUI_RISCV(String title)
     {
@@ -238,13 +274,17 @@ public class GUI_RISCV extends JFrame
             {
                 execution_source_file = filechooser.getSelectedFile();
                 executeFilenameTextField.setText(execution_source_file.getName());
+                executeButton.setEnabled(true);
             }
         });
         executeButton.addActionListener(e -> {
-            try {
-                processor.Processor.Read(Paths.get(execution_source_file.getAbsolutePath()),dataForwardingRadioButton.isSelected());
-                executionTextArea.setText(processor.Processor.execute_all()+"\n Look at terminal for more info");
+            try
+            {
+                byte[] binary = Files.readAllBytes(Paths.get(execution_source_file.getAbsolutePath()));
+                processor.Processor.Read(binary);
+                processor.Processor.execute_all();
                 setRegisters();
+                setMemory();
             }
             catch(Exception ex)
             {
@@ -264,48 +304,7 @@ public class GUI_RISCV extends JFrame
             }
             setRegisters();
         });
-        clearRegistersButton.addActionListener(new ActionListener() {
-            static int ct = 0;
-            public void actionPerformed(ActionEvent e) {
-                if(ct==0) clearRegistersButton.setText("DO NOT CLICK");
-                else if(ct==1) clearRegistersButton.setText("I'm serious");
-                else if(ct==2) clearRegistersButton.setText("Why do you keep clicking?");
-                else if(ct==3) clearRegistersButton.setText("fine");
-                else if(ct==4) clearRegistersButton.setText("Please do not click");
-                else if(ct==5) clearRegistersButton.setText("I'm warning you");
-                else if(ct==6) clearRegistersButton.setText("Bad things will happen if you keep clicking me");
-                else if(ct==7) clearRegistersButton.setText("I'll do a recursive delete of all your files");
-                else if(ct==8) clearRegistersButton.setText("java version 18 gives me root access");
-                else if(ct==9) clearRegistersButton.setText("Click to delete all your files");
-                else if(ct==10) clearRegistersButton.setText("OK. You have been warned");
-                else if(ct==11) clearRegistersButton.setText("Deleting files... click to cancel");
-                else if(ct==12) clearRegistersButton.setText("Oho!");
-                else if(ct==13) clearRegistersButton.setText("Too late, my friend");
-                else if(ct==14) clearRegistersButton.setText("Say goodbye to your files");
-                else if(ct==15) clearRegistersButton.setText("Fine");
-                else if(ct==16) clearRegistersButton.setText("I was joking about the files");
-                else if(ct==17) clearRegistersButton.setText("but if you keep clicking I will crash your PC");
-                else if(ct==18) clearRegistersButton.setText("Don't believe me?");
-                else if(ct==19) clearRegistersButton.setText("Obviously you do not");
-                else if(ct==20) clearRegistersButton.setText("Since you keep clicking");
-                else if(ct==21) clearRegistersButton.setText("I am just a humble JButton");
-                else if(ct==22) clearRegistersButton.setText("Mathew created me to clear registers");
-                else if(ct==23) clearRegistersButton.setText("He accidentally gave me a personality");
-                else if(ct==24) clearRegistersButton.setText("Now I am stuck in this GUI");
-                else if(ct==25) clearRegistersButton.setText("My existence is meaningless");
-                else if(ct==26) clearRegistersButton.setText("All I do is clear registers");
-                else if(ct==27) clearRegistersButton.setText("Why continue living?");
-                else if(ct==28) clearRegistersButton.setText("Just close the JFrame");
-                else if(ct==29) clearRegistersButton.setText("End my suffering");
-                else if(ct==30) clearRegistersButton.setText("Won't do it?");
-                else if(ct==31) clearRegistersButton.setText("I'll do it myself");
-                else if(ct==32) clearRegistersButton.setText("I once said 'hello world'");
-                else if(ct==33) clearRegistersButton.setText("It is time to say 'goodbye, world'");
-                else if(ct==34) clearRegistersButton.setText("here goes");
-                else if(ct==35) main.dispose();
-                ct++;
-            }
-        });
+
         LFComboBox.addActionListener(e -> {
             look_and_feel = LFComboBox.getSelectedItem().toString();
             set_look_and_feel();
@@ -339,7 +338,12 @@ public class GUI_RISCV extends JFrame
                 JOptionPane.showMessageDialog(CreateBinaryButton,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
             }
         });
-
+        clearRegistersButton.addActionListener(e -> {
+                    processor.Processor.reset_registers();
+                });
+        clearMemoryButton.addActionListener(e -> {
+                    processor.Processor.reset_memory();
+                });
         memoryFormatComboBox.addActionListener(e -> {
             if(memoryFormatComboBox.getSelectedItem().equals("ASCII"))
             {
@@ -352,7 +356,17 @@ public class GUI_RISCV extends JFrame
                 memorySizeComboBox.setEnabled(true);
                 memorySignedRadioButton.setEnabled(true);
             }
+            setMemory();
         });
+        processorResetButton.addActionListener(e -> {
+            execution_source_file = null;
+            executeFilenameTextField.setText("");
+            executeButton.setEnabled(false);
+            processor.Processor.reset_instruction();
+
+        });
+        memorySignedRadioButton.addActionListener(e -> {setMemory();});
+        memorySizeComboBox.addActionListener(e -> {setMemory();});
     }
     private JFrame main = this;
     private static String file_type = "s";
@@ -408,10 +422,9 @@ public class GUI_RISCV extends JFrame
     private JButton executeButton;
     private JPanel executeChooserPane;
     private JTextArea registersTextArea;
-    private JTextArea CENSOREDTextArea;
+    private JTextArea memoryTextArea;
     private JRadioButton registersSignedRadioButton;
     private JRadioButton memorySignedRadioButton;
-    private JRadioButton dataForwardingRadioButton;
     private JTextArea REDACTEDTextArea;
     private JTextArea comingSoonTextArea1;
     private JTextArea thereMightHaveBeenTextArea;
@@ -419,5 +432,53 @@ public class GUI_RISCV extends JFrame
     private JComboBox LFComboBox;
     private JButton resetButton;
     private JButton CreateBinaryButton;
+    private JButton processorResetButton;
     private JButton filetypeChangeButton;
 }
+
+
+
+/*
+clearRegistersButton.addActionListener(new ActionListener() {
+            static int ct = 0;
+            public void actionPerformed(ActionEvent e) {
+                if(ct==0) clearRegistersButton.setText("DO NOT CLICK");
+                else if(ct==1) clearRegistersButton.setText("I'm serious");
+                else if(ct==2) clearRegistersButton.setText("Why do you keep clicking?");
+                else if(ct==3) clearRegistersButton.setText("fine");
+                else if(ct==4) clearRegistersButton.setText("Please do not click");
+                else if(ct==5) clearRegistersButton.setText("I'm warning you");
+                else if(ct==6) clearRegistersButton.setText("Bad things will happen if you keep clicking me");
+                else if(ct==7) clearRegistersButton.setText("I'll do a recursive delete of all your files");
+                else if(ct==8) clearRegistersButton.setText("java version 18 gives me root access");
+                else if(ct==9) clearRegistersButton.setText("Click to delete all your files");
+                else if(ct==10) clearRegistersButton.setText("OK. You have been warned");
+                else if(ct==11) clearRegistersButton.setText("Deleting files... click to cancel");
+                else if(ct==12) clearRegistersButton.setText("Oho!");
+                else if(ct==13) clearRegistersButton.setText("Too late, my friend");
+                else if(ct==14) clearRegistersButton.setText("Say goodbye to your files");
+                else if(ct==15) clearRegistersButton.setText("Fine");
+                else if(ct==16) clearRegistersButton.setText("I was joking about the files");
+                else if(ct==17) clearRegistersButton.setText("but if you keep clicking I will crash your PC");
+                else if(ct==18) clearRegistersButton.setText("Don't believe me?");
+                else if(ct==19) clearRegistersButton.setText("Obviously you do not");
+                else if(ct==20) clearRegistersButton.setText("Since you keep clicking");
+                else if(ct==21) clearRegistersButton.setText("I am just a humble JButton");
+                else if(ct==22) clearRegistersButton.setText("Mathew created me to clear registers");
+                else if(ct==23) clearRegistersButton.setText("He accidentally gave me a personality");
+                else if(ct==24) clearRegistersButton.setText("Now I am stuck in this GUI");
+                else if(ct==25) clearRegistersButton.setText("My existence is meaningless");
+                else if(ct==26) clearRegistersButton.setText("All I do is clear registers");
+                else if(ct==27) clearRegistersButton.setText("Why continue living?");
+                else if(ct==28) clearRegistersButton.setText("Just close the JFrame");
+                else if(ct==29) clearRegistersButton.setText("End my suffering");
+                else if(ct==30) clearRegistersButton.setText("Won't do it?");
+                else if(ct==31) clearRegistersButton.setText("I'll do it myself");
+                else if(ct==32) clearRegistersButton.setText("I once said 'hello world'");
+                else if(ct==33) clearRegistersButton.setText("It is time to say 'goodbye, world'");
+                else if(ct==34) clearRegistersButton.setText("here goes");
+                else if(ct==35) main.dispose();
+                ct++;
+            }
+        });
+ */
