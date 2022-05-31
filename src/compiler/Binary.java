@@ -267,7 +267,7 @@ public class Binary
         }
         return answer.toString();
     }
-    public static String convert(long value,boolean signed,int base)
+    public static String convert(long value,boolean signed,int base,int length)
     {
         String answer = "";
         String bin;
@@ -275,7 +275,7 @@ public class Binary
 
         if(signed&&value<0){value=-value;answer+="-";}
 
-        bin = to_binary(value,32,true);
+        bin = to_binary(value,length,true);
         if(base==2)answer+=bin;
         else if(base == 10)answer+=to_decimal(bin);
         else if(base == 8)answer+=to_octal(bin);
@@ -380,8 +380,8 @@ public class Binary
             String immediate = extract_bits(31,20,instruction,31,0);
             String val;
             if(OPCODE.equals("0010011") && (funct3.equals("001")|| funct3.equals("101")))
-                val=convert(from_binary_unsigned(immediate.substring(7)),false,base);
-            else val=convert(from_binary_signed(immediate),true,base);
+                val=convert(from_binary_unsigned(immediate.substring(7)),false,base,32);//TODO why 32?
+            else val=convert(from_binary_signed(immediate),true,base,32);// TODO why 32?
             val+="_"+Syntax.get_id_of_base(base);
             command.append(word).append(" ").append(RD_name).append(",").append(RS1_name).append(",").append(val);
 
@@ -402,7 +402,7 @@ public class Binary
             String RS1_name = Syntax.name_of_register((int)from_binary_unsigned(RS1));
             String RS2_name = Syntax.name_of_register((int)from_binary_unsigned(RS2));
             String immediate = extract_bits(31,25,instruction,31,0)+extract_bits(11,25,instruction,31,0);
-            String imm_val = convert(from_binary_unsigned(immediate),false,base)+"_"+Syntax.get_id_of_base(base);
+            String imm_val = convert(from_binary_unsigned(immediate),false,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+imm_val+"("+RS2_name+")");
         }
         else if(OPCODE.equals("1100011"))//B-type
@@ -424,7 +424,7 @@ public class Binary
                     extract_bits(7,7,instruction,31,0)+
                     extract_bits(30,25,instruction,31,0)+
                     extract_bits(11,8,instruction,31,0);
-            String val = convert(from_binary_signed(immediate)+code_current,true,base)+"_"+Syntax.get_id_of_base(base);
+            String val = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+RS2_name+","+val);
         }
         else if(OPCODE.equals("0110111")||OPCODE.equals("0010111"))

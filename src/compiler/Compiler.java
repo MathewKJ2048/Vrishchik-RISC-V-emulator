@@ -1,6 +1,5 @@
 package compiler;
 
-import processor.Code;
 
 import java.nio.file.*;
 import java.util.*;
@@ -350,7 +349,8 @@ public class Compiler
                             long initial_value = sc.nextLong();
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
-                            l_pc.add(new Instruction(Binary.sw(5, 0, data_current), code_current, Syntax.WORD.words[0] + " " + Syntax.SW.words[0]));
+                            //$t0 or R5 is used as a temporary register to transfer values into the memory
+                            l_pc.add(new Instruction(Binary.sw(0, 5, data_current), code_current, Syntax.WORD.words[0] + " " + Syntax.SW.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.WORD.words[0] + " " + Syntax.ANDI.words[0]));
                             code_current+=4;
@@ -367,7 +367,7 @@ public class Compiler
                             long initial_value = sc.nextLong();
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.BYTE.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
-                            l_pc.add(new Instruction(Binary.sb(5, 0, data_current), code_current, Syntax.BYTE.words[0] + " " + Syntax.SB.words[0]));
+                            l_pc.add(new Instruction(Binary.sb(0, 5, data_current), code_current, Syntax.BYTE.words[0] + " " + Syntax.SB.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.BYTE.words[0] + " " + Syntax.ANDI.words[0]));
                             code_current+=4;
@@ -384,7 +384,7 @@ public class Compiler
                             long initial_value = sc.nextLong();
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.SHORT.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
-                            l_pc.add(new Instruction(Binary.sh(5, 0, data_current), code_current, Syntax.SHORT.words[0] + " " + Syntax.SH.words[0]));
+                            l_pc.add(new Instruction(Binary.sh(0, 5, data_current), code_current, Syntax.SHORT.words[0] + " " + Syntax.SH.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.SHORT.words[0] + " " + Syntax.ANDI.words[0]));
                             code_current+=4;
