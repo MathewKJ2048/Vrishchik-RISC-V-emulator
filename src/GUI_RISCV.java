@@ -1,79 +1,136 @@
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/*
+TODO look into improper rendering of nimbus, metal and others
+ */
 
 public class GUI_RISCV extends JFrame
 {
-
-    public static String to_binary(int value, int length, boolean signed)
+    public static final String LAF_JSON_KEY = "Look and Feel";
+    public static final String DEFAULT_DIRECTORY_PATH_JSON_KEY = "Default Directory Path";
+    public static final String FILE_TYPE_JSON_KEY = "File Type";
+    public static final HashMap<String,String> LOOK_AND_FEEL = get_all_lookas_and_feels();
+    private static HashMap<String,String> get_all_lookas_and_feels()
     {
-        try{
-            if(signed) return compiler.Binary.to_binary_signed(value,length);
-            else return compiler.Binary.to_binary_unsigned(value,length);
-        }
-        catch (Exception e)
+        HashMap<String,String> laf = new HashMap<String, String>();
+        laf.put("Acryl","com.jtattoo.plaf.acryl.AcrylLookAndFeel");
+        laf.put("Aero","com.jtattoo.plaf.aero.AeroLookAndFeel");
+        laf.put("Aluminum","com.jtattoo.plaf.aluminium.AluminiumLookAndFeel");
+        laf.put("Bernstein","com.jtattoo.plaf.bernstein.BernsteinLookAndFeel");
+        laf.put("Fast","com.jtattoo.plaf.fast.FastLookAndFeel");
+        laf.put("Graphite","com.jtattoo.plaf.graphite.GraphiteLookAndFeel");
+        laf.put("HiFi","com.jtattoo.plaf.hifi.HiFiLookAndFeel");
+        laf.put("Luna","com.jtattoo.plaf.luna.LunaLookAndFeel");
+        laf.put("McWin","com.jtattoo.plaf.mcwin.McWinLookAndFeel");
+        laf.put("Metal","javax.swing.plaf.metal.MetalLookAndFeel");
+        laf.put("Michaelsoft Binbows","com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+        laf.put("Mint","com.jtattoo.plaf.mint.MintLookAndFeel");
+        laf.put("Motif","com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+        laf.put("Nimbus","javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        laf.put("Noire","com.jtattoo.plaf.noire.NoireLookAndFeel");
+        laf.put("Smart","com.jtattoo.plaf.smart.SmartLookAndFeel");
+        laf.put("Texture","com.jtattoo.plaf.texture.TextureLookAndFeel");
+        laf.put("Default","javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        return laf;
+    }
+    public static String get_look_and_feel_location(String look_and_feel) throws Exception
+    {
+        String location = LOOK_AND_FEEL.get(look_and_feel);
+        if(location==null)throw new Exception("Look and Feel not found");
+        return location;
+    }
+    public void set_look_and_feel()
+    {
+        try
         {
-            return "-".repeat(length);
+            UIManager.setLookAndFeel(get_look_and_feel_location(look_and_feel));
+        }
+        catch (Exception ex)
+        {
+            JOptionPane.showMessageDialog(main,ex.getStackTrace(),"Look and Feel not found",JOptionPane.ERROR_MESSAGE);
+        }
+        SwingUtilities.updateComponentTreeUI(main);
+        main.pack();
+    }
+    public void initialize()
+    {
+        filetypeTextField.setText(file_type);
+        this.directoryTextField.setText(default_directory.getAbsolutePath());
+        this.LFComboBox.setSelectedItem(look_and_feel);
+        setRegisters();
+    }
+    public static void load_preferences()
+    {
+        /*
+        try to open config.json
+        if not found, abort
+        else
+        String file type
+        String default path (check if it exists, if not use system default)
+        String Look and Feel (only name, not address, check if the combobox contains it)
+         */
+        JSONParser jp = new JSONParser();
+        try
+        {
+            JSONObject obj = (JSONObject) jp.parse(new FileReader("config.json"));
+            try
+            {
+                file_type = (String)obj.get(FILE_TYPE_JSON_KEY); // this does not require verification
+                String laf = (String)obj.get(LAF_JSON_KEY);
+                Path default_directory_path = Paths.get((String)obj.get(DEFAULT_DIRECTORY_PATH_JSON_KEY));
+                if(!(Files.isDirectory(default_directory_path) && Files.isWritable(default_directory_path)))throw new Exception("Invalid path for default directory");
+                if(LOOK_AND_FEEL.containsKey(laf))look_and_feel=laf;
+                else
+                {
+                    look_and_feel = "Default";
+                    throw new Exception("look and feel not rcognized, using default look and feel");
+
+                }
+                default_directory = default_directory_path.toFile();
+            }
+            catch(Exception e)
+            {
+                JOptionPane.showMessageDialog(new JFrame(),e.getMessage()+"\nconfig.json has been corrupted, default settings will be used","Warning",JOptionPane.WARNING_MESSAGE);
+            }
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(new JFrame(),"config.json not found, using default settings","Warning",JOptionPane.WARNING_MESSAGE);
         }
     }
-    public static String to_decimal(String binary)
+    public void save_and_exit()
     {
-        if(binary.charAt(0)=='-')return "-";
-        long answer = 0;
-        for(int i=0;i<binary.length();i++)
+        file_type = filetypeTextField.getText();
+        main.dispose();
+        JSONObject obj = new JSONObject();
+        obj.put(DEFAULT_DIRECTORY_PATH_JSON_KEY,default_directory.getAbsolutePath());
+        obj.put(FILE_TYPE_JSON_KEY,file_type);
+        obj.put(LAF_JSON_KEY,look_and_feel);
+        try
         {
-            answer = answer<<1;
-            answer+=binary.charAt(i)-'0';
+            Files.writeString(Paths.get("config.json"), obj.toString());
         }
-        return answer+"";
-    }
-    public static String to_octal(String binary)
-    {
-        if(binary.charAt(0)=='-')return "-";
-        int l = binary.length();
-        int off = l%3;
-        binary = "0".repeat(off!=0?(3-off):0)+binary;
-        StringBuilder answer = new StringBuilder();
-        for(int i=0;i<binary.length()/3;i++)
-        {
-            String triad = binary.substring(3*i,3*i+3);
-            answer.append(""+to_decimal(triad));
-        }
-        return answer.toString();
-    }
-    public static String to_hexadecimal(String binary)
-    {
-        if(binary.charAt(0)=='-')return "-";
-        int l = binary.length();
-        int off = l%4;
-        binary = "0".repeat(off!=0?(4-off):0)+binary;
-        StringBuilder answer = new StringBuilder();
-        for(int i=0;i<binary.length()/4;i++)
-        {
-            String tetrad = binary.substring(4*i,4*i+4);
-            String dec = to_decimal(tetrad);
-            if(dec.length()>=2)answer.append(""+(char)(dec.charAt(1)-'0'+'A'));
-            else answer.append(dec);
-        }
-        return answer.toString();
-    }
-    public static String convert(int value,boolean signed,int base)
-    {
-        String answer = "";
-        String bin;
-
-
-            if(signed&&value<0){value=-value;answer+="-";}
-
-        bin = to_binary(value,32,true);
-        if(base==2)answer+=bin;
-        else if(base == 10)answer+=to_decimal(bin);
-        else if(base == 8)answer+=to_octal(bin);
-        else if(base == 16)answer+=to_hexadecimal(bin);
-        return answer;
+        catch(Exception ex){
+            ex.printStackTrace();}//no error message here, it will be jarring to see one after closing
+        System.exit(0);
     }
     private void setRegisters() {
         StringBuilder b = new StringBuilder();
@@ -95,101 +152,41 @@ public class GUI_RISCV extends JFrame
                 else if(option.equals("decimal"))base=10;
                 else if(option.equals("hexadecimal"))base=16;
                 if(base==-1)this.registersTextArea.setText("Unrecognized base");
-                s = convert(value,registersSignedRadioButton.isSelected(),base);
+                s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base);
             }
             b.append("Register "+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
         }
         this.registersTextArea.setText(b.toString());
     }
-    private JFrame main = this;
-    private String file_type;
-    private File compilation_source_file;
-    private File execution_source_file;
-    private String registersFormat;
-    private String memoryFormat;
-    private String memorySize;
-    private JTabbedPane tabbedPane1;
-    private JPanel mainPanel;
-    private JPanel infoTab;
-    private JPanel compileTab;
-    private JPanel executionTab;
-    private JPanel DataTab;
-    private JPanel helpTab;
-    private JTabbedPane tabbedPane2;
-    private JTabbedPane tabbedPane3;
-    private JTabbedPane compileOutputTabbedPane;
-    private JButton compileButton;
-    private JButton compileLoadButton;
-    private JTextArea sourceTextArea;
-    private JTextArea labelsTextArea;
-    private JTextArea transcriptTextArea;
-    private JTextArea binaryTextArea;
-    private JTextField compileFilenameTextField;
-    private JComboBox memoryFormatComboBox;
-    private JComboBox registerFormatComboBox;
-    private JTextField directoryTextField;
-    private JButton directoryChangeButton;
-    private JPanel compileChooserPanel;
-    private JPanel sourcePanel;
-    private JPanel labelsPanel;
-    private JPanel transcriptPanel;
-    private JPanel binaryPanel;
-    private JScrollPane sourceScrollPane;
-    private JScrollPane labelsScrollPane;
-    private JScrollPane transcriptScrollPane;
-    private JScrollPane binaryScrollPane;
-    private JPanel settingsTab;
-    private JTextField filetypeTextField;
-    private JButton clearRegistersButton;
-    private JButton clearMemoryButton;
-    private JComboBox memorySizeComboBox;
-    private JTextArea executionTextArea;
-    private JTextField executeFilenameTextField;
-    private JButton executeLoadButton;
-    private JButton executeButton;
-    private JPanel executeChooserPane;
-    private JTextArea registersTextArea;
-    private JTextArea CENSOREDTextArea;
-    private JRadioButton registersSignedRadioButton;
-    private JRadioButton memorySignedRadioButton;
-    private JRadioButton dataForwardingRadioButton;
-    private JTextArea REDACTEDTextArea;
-    private JTextArea comingSoonTextArea1;
-    private JTextArea thereMightHaveBeenTextArea;
-    private JRadioButton createBinaryRadioButton;
-    private JComboBox LFComboBox;
-    private JButton resetButton;
-    private JButton filetypeChangeButton;
-
     public GUI_RISCV(String title)
     {
-
         super(title);
-
+        initialize();
+        main.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                save_and_exit();
+            }
+        });
         final JFileChooser fc = new JFileChooser();
         this.setContentPane(mainPanel);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.pack();
         this.setVisible(true);
-        this.file_type = "s";
-        filetypeTextField.setText(file_type);
-        this.directoryTextField.setText(fc.getCurrentDirectory().getAbsolutePath());
-        setRegisters();
 
         directoryChangeButton.addActionListener(e -> {
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int rv = fc.showOpenDialog(GUI_RISCV.this);
             if(rv == JFileChooser.APPROVE_OPTION)
             {
-                File f = fc.getSelectedFile();
-                String path = f.getAbsolutePath();
-                directoryTextField.setText(path);
-                fc.setCurrentDirectory(f);
+                default_directory = fc.getSelectedFile();
+                directoryTextField.setText(default_directory.getAbsolutePath());
+                fc.setCurrentDirectory(default_directory);
             }
         });
         compileLoadButton.addActionListener(e -> {
             JFileChooser filechooser = new JFileChooser();
-            filechooser.setCurrentDirectory(fc.getCurrentDirectory());
+            filechooser.setCurrentDirectory(default_directory);
             filechooser.setAcceptAllFileFilterUsed(false);
             FileNameExtensionFilter ffff = new FileNameExtensionFilter(filetypeTextField.getText(),filetypeTextField.getText());
             filechooser.setFileFilter(ffff);
@@ -198,20 +195,16 @@ public class GUI_RISCV extends JFrame
             {
                 compilation_source_file = filechooser.getSelectedFile();
                 compileFilenameTextField.setText(compilation_source_file.getName());
+                compileButton.setEnabled(true);
             }
         });
         compileButton.addActionListener(e -> {
-            if(compilation_source_file==null)
-            {
-                JOptionPane.showMessageDialog(compileTab,"No file chosen","Error",JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            String name = compilation_source_file.getName();
-            name = name.substring(0,name.indexOf("."+filetypeTextField.getText()));
             String error = "";
             boolean is_correct = true;
-            try {
-                compiler.Compiler.compile(Paths.get(compilation_source_file.getAbsolutePath()), Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin"),createBinaryRadioButton.isSelected());
+            try
+            {
+                List<String> lines = Files.readAllLines(Paths.get(compilation_source_file.getAbsolutePath()));
+                compiler.Compiler.compile(lines);
             }
             catch(Exception ex)
             {
@@ -226,12 +219,17 @@ public class GUI_RISCV extends JFrame
             {
                 JOptionPane.showMessageDialog(compileTab,error,"Error",JOptionPane.ERROR_MESSAGE);
             }
+            else
+            {
+                JOptionPane.showMessageDialog(compileTab,compilation_source_file.getName()+" has been successfully compiled","Compilation Successful",JOptionPane.INFORMATION_MESSAGE);
+                CreateBinaryButton.setEnabled(true);
+            }
 
         });
         executeLoadButton.addActionListener(e -> {
 
             JFileChooser filechooser = new JFileChooser();
-            filechooser.setCurrentDirectory(fc.getCurrentDirectory());
+            filechooser.setCurrentDirectory(default_directory);
             filechooser.setAcceptAllFileFilterUsed(false);
             FileNameExtensionFilter ffff = new FileNameExtensionFilter("binary","bin");
             filechooser.setFileFilter(ffff);
@@ -309,46 +307,117 @@ public class GUI_RISCV extends JFrame
             }
         });
         LFComboBox.addActionListener(e -> {
+            look_and_feel = LFComboBox.getSelectedItem().toString();
+            set_look_and_feel();
+        });
+        resetButton.addActionListener(e -> {
+            compilation_source_file = null;
+            compileFilenameTextField.setText("");
+            sourceTextArea.setText("");
+            binaryTextArea.setText("");
+            transcriptTextArea.setText("");
+            labelsTextArea.setText("");
+            compileButton.setEnabled(false);
+            CreateBinaryButton.setEnabled(false);
+            compiler.Compiler.reset();
+        });
+        CreateBinaryButton.addActionListener(e -> {
+            if(!compiler.Compiler.is_ready())
+            {
+                JOptionPane.showMessageDialog(CreateBinaryButton,"Unable to generate binary, syntax errors detected","Error",JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             try
             {
-                String laf = (String)LFComboBox.getSelectedItem();
-                if(laf.equals("Acryl"))UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
-                else if(laf.equals("Aero"))UIManager.setLookAndFeel("com.jtattoo.plaf.aero.AeroLookAndFeel");
-                else if(laf.equals("Aluminum"))UIManager.setLookAndFeel("com.jtattoo.plaf.aluminium.AluminiumLookAndFeel");
-                else if(laf.equals("Bernstein"))UIManager.setLookAndFeel("com.jtattoo.plaf.bernstein.BernsteinLookAndFeel");
-                else if(laf.equals("Fast"))UIManager.setLookAndFeel("com.jtattoo.plaf.fast.FastLookAndFeel");
-                else if(laf.equals("Graphite"))UIManager.setLookAndFeel("com.jtattoo.plaf.graphite.GraphiteLookAndFeel");
-                else if(laf.equals("Hifi"))UIManager.setLookAndFeel("com.jtattoo.plaf.hifi.HiFiLookAndFeel");
-                else if(laf.equals("Luna"))UIManager.setLookAndFeel("com.jtattoo.plaf.luna.LunaLookAndFeel");
-                else if(laf.equals("McWin"))UIManager.setLookAndFeel("com.jtattoo.plaf.mcwin.McWinLookAndFeel");
-                else if(laf.equals("Michaelsoft Binbows"))UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-                else if(laf.equals("Mint"))UIManager.setLookAndFeel("com.jtattoo.plaf.mint.MintLookAndFeel");
-                else if(laf.equals("Motif"))UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
-                else if(laf.equals("Nimbus (default)"))UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-                else if(laf.equals("Noire"))UIManager.setLookAndFeel("com.jtattoo.plaf.noire.NoireLookAndFeel");
-                else if(laf.equals("Smart"))UIManager.setLookAndFeel("com.jtattoo.plaf.smart.SmartLookAndFeel");
-                else if(laf.equals("Texture"))UIManager.setLookAndFeel("com.jtattoo.plaf.texture.TextureLookAndFeel");
-
+                String name = compilation_source_file.getName();
+                name = name.substring(0,name.indexOf("."+filetypeTextField.getText()));
+                compiler.Compiler.write(Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin"));
+                JOptionPane.showMessageDialog(CreateBinaryButton,name+".bin has been generated and stored in "+compilation_source_file.getParent());
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                JOptionPane.showMessageDialog(LFComboBox,ex.getStackTrace(),"Look and Feel not found",JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(CreateBinaryButton,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
             }
-            SwingUtilities.updateComponentTreeUI(main);
         });
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                compilation_source_file = null;
-                compileFilenameTextField.setText("");
-                sourceTextArea.setText("");
-                binaryTextArea.setText("");
-                transcriptTextArea.setText("");
-                labelsTextArea.setText("");
-                compiler.Compiler.reset();
+
+        memoryFormatComboBox.addActionListener(e -> {
+            if(memoryFormatComboBox.getSelectedItem().equals("ASCII"))
+            {
+                memorySignedRadioButton.setEnabled(false);
+                memorySizeComboBox.setSelectedItem("byte");
+                memorySizeComboBox.setEnabled(false);
+            }
+            else
+            {
+                memorySizeComboBox.setEnabled(true);
+                memorySignedRadioButton.setEnabled(true);
             }
         });
     }
-
-
+    private JFrame main = this;
+    private static String file_type = "s";
+    private static File default_directory = new JFileChooser().getCurrentDirectory();
+    private static String look_and_feel = "Nimbus";
+    public static String get_look_and_feel()
+    {
+        return look_and_feel;
+    }
+    private File compilation_source_file;
+    private File execution_source_file;
+    private String registersFormat;
+    private String memoryFormat;
+    private String memorySize;
+    private JTabbedPane tabbedPane1;
+    private JPanel mainPanel;
+    private JPanel infoTab;
+    private JPanel compileTab;
+    private JPanel executionTab;
+    private JPanel DataTab;
+    private JPanel helpTab;
+    private JTabbedPane tabbedPane2;
+    private JTabbedPane tabbedPane3;
+    private JTabbedPane compileOutputTabbedPane;
+    private JButton compileButton;
+    private JButton compileLoadButton;
+    private JTextArea sourceTextArea;
+    private JTextArea labelsTextArea;
+    private JTextArea transcriptTextArea;
+    private JTextArea binaryTextArea;
+    private JTextField compileFilenameTextField;
+    private JComboBox memoryFormatComboBox;
+    private JComboBox registerFormatComboBox;
+    private JTextField directoryTextField;
+    private JButton directoryChangeButton;
+    private JPanel compileChooserPanel;
+    private JPanel sourcePanel;
+    private JPanel labelsPanel;
+    private JPanel transcriptPanel;
+    private JPanel binaryPanel;
+    private JScrollPane sourceScrollPane;
+    private JScrollPane labelsScrollPane;
+    private JScrollPane transcriptScrollPane;
+    private JScrollPane binaryScrollPane;
+    private JPanel settingsTab;
+    private JTextField filetypeTextField;
+    private JButton clearRegistersButton;
+    private JButton clearMemoryButton;
+    private JComboBox memorySizeComboBox;
+    private JTextArea executionTextArea;
+    private JTextField executeFilenameTextField;
+    private JButton executeLoadButton;
+    private JButton executeButton;
+    private JPanel executeChooserPane;
+    private JTextArea registersTextArea;
+    private JTextArea CENSOREDTextArea;
+    private JRadioButton registersSignedRadioButton;
+    private JRadioButton memorySignedRadioButton;
+    private JRadioButton dataForwardingRadioButton;
+    private JTextArea REDACTEDTextArea;
+    private JTextArea comingSoonTextArea1;
+    private JTextArea thereMightHaveBeenTextArea;
+    private JRadioButton createBinaryRadioButton;
+    private JComboBox LFComboBox;
+    private JButton resetButton;
+    private JButton CreateBinaryButton;
+    private JButton filetypeChangeButton;
 }

@@ -1,38 +1,117 @@
+import compiler.Binary;
+import compiler.Compiler;
+import compiler.Decompiler;
+
 import javax.swing.*;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
+
+
 
 public class Main
 {
     public static void main(String[] args) throws Exception {
 
-        //System.out.println("start");
+
         GUI_check();
-    }
-    public static void BIN_check()
-    {
-        Scanner sc = new Scanner(System.in);
-        while(true)
-        {
-            int val = sc.nextInt();
-            System.out.println("SIGNED:");
-            System.out.println("bin:"+GUI_RISCV.convert(val,true,2));
-            System.out.println("oct:"+GUI_RISCV.convert(val,true,8));
-            System.out.println("dec:"+GUI_RISCV.convert(val,true,10));
-            System.out.println("hex:"+GUI_RISCV.convert(val,true,16));
-            System.out.println("UNSIGNED:");
-            System.out.println("bin:"+GUI_RISCV.convert(val,false,2));
-            System.out.println("oct:"+GUI_RISCV.convert(val,false,8));
-            System.out.println("dec:"+GUI_RISCV.convert(val,false,10));
-            System.out.println("hex:"+GUI_RISCV.convert(val,false,16));
-        }
     }
     public static void GUI_check() throws Exception
     {
-        UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-        //UIManager.getLookAndFeelDefaults().put("defaultFont",new Font("Monospace",Font.PLAIN,10));
-        JFrame r = new GUI_RISCV("RISC-V emulator");
+
+        GUI_RISCV.load_preferences();
+        UIManager.setLookAndFeel(GUI_RISCV.get_look_and_feel_location(GUI_RISCV.get_look_and_feel()));
+        JFrame r = new GUI_RISCV("Vrishchik");
     }
+
+    public static void check() // TODO rewrite
+    {
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get("test.s"));
+            compiler.Compiler.compile(lines);
+        }
+        catch (Exception e)
+        {
+            System.out.println(compiler.Compiler.get_transcript().get_compilation());
+            System.out.println("--------------------------------------------------------");
+            System.out.println(compiler.Compiler.get_transcript().get_labels());
+            System.out.println("---------------------------------------------------------");
+            System.out.println(e.getMessage());
+            System.out.println("Error in compilation");
+            return;
+        }
+
+        System.out.println("compilation complete");
+        try
+        {
+           //compiler.Decompiler.decompile(Paths.get("test2.s"), Paths.get("test.bin"),true,10);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            System.out.println("Error in decompilation");
+            return;
+        }
+        String separator = "----------------";
+        System.out.println(separator+"code:\n"+ Compiler.get_transcript().get_code());
+        System.out.println(separator+"Scrubbed code:\n"+ Compiler.get_transcript().get_scrubbed_code());
+        System.out.println(separator+"labels:\n"+ Compiler.get_transcript().get_labels());
+        System.out.println(separator+"binary:\n"+ Compiler.get_transcript().get_binary());
+        System.out.println(separator+"compilation:\n"+ Compiler.get_transcript().get_compilation());
+        System.out.println("\nDecompiled:\n");
+        System.out.println(Decompiler.get_source());
+        try
+        {
+            //compiler.Compiler.compile(Paths.get("test2.s"), Paths.get("test2.bin"),true);
+        }
+        catch(Exception e)
+        {
+            System.out.println("decompiler code unable to be compiled into test2");
+            e.printStackTrace();
+        }
+        try
+        {
+            //compiler.Decompiler.decompile(Paths.get("test3.s"), Paths.get("test2.bin"),true, 10);
+        }
+        catch(Exception e)
+        {
+            System.out.println("Unable to decompile test2.bin");
+            e.printStackTrace();
+        }
+        try
+        {
+            byte[] byte_code = Files.readAllBytes(Paths.get("test.bin"));
+            byte[] byte_code2 = Files.readAllBytes(Paths.get("test2.bin"));
+            if(byte_code2.length!=byte_code.length)throw new Exception("length mismatch in byte code "+byte_code.length+" vs "+byte_code2.length);
+            for(int i=0;i<byte_code.length;i++)
+            {
+                if(byte_code[i]!=byte_code2[i])throw new Exception("byte code is different");
+            }
+            System.out.println("byte codes verified to be same");
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        try
+        {
+            byte[] source_code = Files.readAllBytes(Paths.get("test.bin"));
+            byte[] source_code2 = Files.readAllBytes(Paths.get("test2.bin"));
+            if(source_code2.length!=source_code.length)throw new Exception("length mismatch in source code");
+            for(int i=0;i<source_code.length;i++)
+            {
+                if(source_code[i]!=source_code2[i])throw new Exception("source code is different");
+            }
+            System.out.println("source codes verified to be same");
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    /*
     public static void bin_check() throws Exception
     {
         Scanner sc = new Scanner(System.in);
@@ -83,10 +162,9 @@ public class Main
         {
             System.out.println("Register x"+i+": "+processor.Processor.get_register(i));
         }
-    }
+    }*/
     public static void parse_check()
     {
-
         compiler.Parser p = new compiler.Parser(" \" a, , bc \" , , \"efg\" ");
         while(p.hasNext())
         {
@@ -99,5 +177,35 @@ public class Main
                 break;
             }
         }
+    }
+    public static void BIN_check()
+    {
+        Scanner sc = new Scanner(System.in);
+        while(true)
+        {
+            int val = sc.nextInt();
+            System.out.println("SIGNED:");
+            System.out.println("bin:"+compiler.Binary.convert(val,true,2));
+            System.out.println("oct:"+compiler.Binary.convert(val,true,8));
+            System.out.println("dec:"+compiler.Binary.convert(val,true,10));
+            System.out.println("hex:"+compiler.Binary.convert(val,true,16));
+            System.out.println("UNSIGNED:");
+            System.out.println("bin:"+compiler.Binary.convert(val,false,2));
+            System.out.println("oct:"+compiler.Binary.convert(val,false,8));
+            System.out.println("dec:"+compiler.Binary.convert(val,false,10));
+            System.out.println("hex:"+compiler.Binary.convert(val,false,16));
+        }
+    }
+    public static void from_bin_check()
+    {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("start");
+        while(true)
+        {
+            String s = sc.next();
+            if(s.equals("quit"))break;
+            System.out.println("number is:"+Binary.from_binary_signed(s));
+        }
+        System.out.println("end");
     }
 }
