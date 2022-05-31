@@ -7,6 +7,7 @@ import java.util.*;
 
 public class Compiler
 {
+    private static boolean ready;
     private static int data_current;
     private static int code_current;
     private static Source_stream raw;
@@ -147,7 +148,7 @@ public class Compiler
     private static Source_stream code_section;
     private static Source_stream data_section;
 
-    private static void reset()
+    public static void reset()
     {
         transcript = new Transcript();
         data_current = 0;
@@ -158,6 +159,11 @@ public class Compiler
         l_ld = new ArrayList<>();
         l_lc = new ArrayList<>();
         l_pc = new ArrayList<>();
+        ready = false;
+    }
+    public static boolean is_ready()
+    {
+        return ready;
     }
     private static void check_clashing_labels()throws Exception
     {
@@ -184,29 +190,9 @@ public class Compiler
     {
         return transcript;
     }
-
-    public static void compile(Path source, Path binary, boolean write) throws Exception
+    public static void write(Path binary) throws Exception
     {
-        reset();
-        List<String> l_raw = Files.readAllLines(source);
-        for(int i = 0;i< l_raw.size();i++)
-        {
-            raw.append(l_raw.get(i)+Syntax.WHITESPACE,i+1);
-        }
-        scrub();
-        raw.log(transcript.scrubbed_code);
-        locate_blocs();
-        process_data(transcript.compilation);
-        process_code(transcript.compilation);
-
-        transcript.binary.append("\nPC\t|              code              |purpose");
-
-        for (Instruction instruction : l_pc) {
-            transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|").append(instruction.comment);
-        }
         //writing binary file
-        // this occurs iff no syntax errors are found in the source file
-        if(!write)return;
         byte[] b_array = new byte[l_pc.size()*4];
         for(int i=0;i<l_pc.size();i++)
         {
@@ -219,6 +205,27 @@ public class Compiler
             }
         }
         Files.write(binary, b_array);
+    }
+    public static void compile(List<String> l_raw) throws Exception
+    {
+        reset();
+        for(int i = 0;i< l_raw.size();i++)
+        {
+            raw.append(l_raw.get(i)+Syntax.WHITESPACE,i+1);
+        }
+        raw.log(transcript.code);
+        scrub();
+        raw.log(transcript.scrubbed_code);
+        locate_blocs();
+        process_data(transcript.compilation);
+        process_code(transcript.compilation);
+
+        transcript.binary.append("\nPC\t|              code              |purpose");
+
+        for (Instruction instruction : l_pc) {
+            transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|").append(instruction.comment);
+        }
+        ready = true;
     }
 
     private static void scrub() throws Exception
@@ -976,7 +983,7 @@ public class Compiler
                             throw new Exception(e.getMessage()+"\nimproper arguments in line "+code_section.numbers.get(sc.start()));
                         }
                     }
-                    else if(Syntax.JALR.contains(token))//TODO Look into this
+                    else if(Syntax.JALR.contains(token))
                     {
                         // r or r,i(r)
                         try
@@ -1001,8 +1008,9 @@ public class Compiler
                             else
                             {
                                 src_add = r_c_add;
-                            }//TODO look into whether this needs to be relative
-                            l_pc.add(new Instruction(Binary.jalr(src_add,dest_add,immediate-code_current), code_current,Syntax.JALR.words[0]));
+                            }
+                            //addressing is absolute here
+                            l_pc.add(new Instruction(Binary.jalr(src_add,dest_add,immediate), code_current,Syntax.JALR.words[0]));
                             code_current+=4*Syntax.get_n_of_command(token);
                         }
                         catch(Exception e)

@@ -66,7 +66,7 @@ public class Binary
         String opcode = "0010011";
         String source = to_binary_unsigned(source_register_address,5);
         String destination = to_binary_unsigned(destination_register_address,5);
-        String shamt = to_binary_unsigned(value,5); //TODO verify this
+        String shamt = to_binary_unsigned(value,5);
         return funct7+shamt+source+funct3+destination+opcode;
     }
     public static String slli(int source_register_address, int destination_register_address, long value) throws Exception
@@ -301,7 +301,7 @@ public class Binary
     }
 
 
-    public static String get_command(String instruction,int base,int code_current) throws Exception
+    public static String get_command(String instruction,int base,int code_current) throws Exception //TODO look into error thrown for getting comment
     {
         if(instruction.length()!=32)throw new Exception("Error: size mismatch");
         StringBuilder command = new StringBuilder("");
@@ -372,20 +372,17 @@ public class Binary
             }
             else
             {
-                if(funct3.equals("000"))word=Syntax.JALR.words[0]; //todo if relative, change value
+                if(funct3.equals("000"))word=Syntax.JALR.words[0];
                 else throw new Exception("Unrecognized funct3 ("+funct3+") for I-type instruction: "+instruction);
             }
             String RD_name = Syntax.name_of_register((int)from_binary_unsigned(RD));
             String RS1_name = Syntax.name_of_register((int)from_binary_unsigned(RS1));
             String immediate = extract_bits(31,20,instruction,31,0);
-            System.out.println("immediate is:"+immediate);
-            System.out.println("SHAMT is:"+immediate.substring(7));
             String val;
             if(OPCODE.equals("0010011") && (funct3.equals("001")|| funct3.equals("101")))
                 val=convert(from_binary_unsigned(immediate.substring(7)),false,base);
             else val=convert(from_binary_signed(immediate),true,base);
             val+="_"+Syntax.get_id_of_base(base);
-            //System.out.println("value is:"+value);
             command.append(word).append(" ").append(RD_name).append(",").append(RS1_name).append(",").append(val);
 
         }
@@ -407,8 +404,6 @@ public class Binary
             String immediate = extract_bits(31,25,instruction,31,0)+extract_bits(11,25,instruction,31,0);
             String imm_val = convert(from_binary_unsigned(immediate),false,base)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+imm_val+"("+RS2_name+")");
-            command.append("# ");
-            command.append("S");
         }
         else if(OPCODE.equals("1100011"))//B-type
         {
@@ -429,21 +424,16 @@ public class Binary
                     extract_bits(7,7,instruction,31,0)+
                     extract_bits(30,25,instruction,31,0)+
                     extract_bits(11,8,instruction,31,0);
-            System.out.println("Immediate:"+immediate);
             String val = convert(from_binary_signed(immediate)+code_current,true,base)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+RS2_name+","+val);
         }
         else if(OPCODE.equals("0110111")||OPCODE.equals("0010111"))
         {
             //U_TYPE;
-            command.append("# ");
-            command.append("U");
         }
         else if(OPCODE.equals("1101111"))
         {
             //J_TYPE;
-            command.append("# ");
-            command.append("J");
         }
         else throw new Exception("unrecognized opcode");
         return command.toString();
