@@ -1,7 +1,6 @@
 package processor;
 
-public class Extract_Reg{
-    Database D = Processor.D;
+class Extract_Reg{
     public void Get_Reg(String s,String s1,int[] Reg){
         switch (s1) {
             case "R" -> Reg_R(Reg, s);
@@ -40,14 +39,5 @@ public class Extract_Reg{
     }
     public void Reg_J(int[] Reg,String s){
         Reg[0] = UTIL.toDecimal(s.substring(20,25));
-    }
-    public void check2(int k){
-        for(int j=0;j<k;j++){
-            //System.out.println("----------------------------start---------------------------------------------");
-            Processor.execute_all();
-            Processor.END=true;
-            //System.out.println("-----------------------------end--------------------------------------------");
-            D.PC=0;
-        }
     }
 }

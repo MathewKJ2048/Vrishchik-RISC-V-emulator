@@ -1,7 +1,6 @@
 package processor;
 
 class Instruction_SET{
-    static int i = 80;
     public int Find_Inst(String s,String s1){
         return switch (s1) {
             case "R" -> Set_R(s);
@@ -109,3 +108,4 @@ class Instruction_SET{
         }
     }
 }
+

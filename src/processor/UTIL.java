@@ -1,9 +1,6 @@
 package processor;
 
-import compiler.Compiler;
-
-public class UTIL{
-    Database D = Processor.D;
+class UTIL{
     static int toDecimal(String s){
         int sum=0;
         for(int i=0;i<s.length();i++){
@@ -25,17 +22,5 @@ public class UTIL{
         Processor.D.Mem[mem+1]=(byte)(value>>16);
         Processor.D.Mem[mem+2]=(byte)(value>>8);
         Processor.D.Mem[mem+3]=(byte)(value);
-    }
-    public void check(int i){
-        System.out.println(i+" "+Instruction_SET.i);
-        if(i== Instruction_SET.i){
-            Code.BubbleSort();
-            Processor.i=68;
-            for(int j=9;j>0;j--){
-                D.R[8]=0;
-                Processor.E.check2(j);
-            }
-            Processor.END=false;
-        }
     }
 }
