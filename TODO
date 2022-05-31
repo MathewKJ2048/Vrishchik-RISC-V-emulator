@@ -11,8 +11,9 @@ font adjustor
 info revamp
 button placement
 step-execution
-memory viewing
 decompiling, pointing
+icon design
+console placement
 
 Documentation:
 features
@@ -20,3 +21,4 @@ general syntax
 command syntax
 example programs
 guide to source code
+html page with instructions
