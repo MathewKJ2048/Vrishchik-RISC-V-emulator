@@ -1,6 +1,7 @@
 ECALLs (come up with calling codes)
 pipelining
 data forwarding
+deal with data integration (stack pointer)
 
 Decompiler:
 U type
@@ -14,6 +15,12 @@ step-execution
 decompiling, pointing
 icon design
 console placement
+page memory ><
+load file for processor causing decompilation
+arrow pointer
+run processor in different thread
+execution idempotence (Don't keep creating new threads)
+auto-open console
 
 Documentation:
 features
@@ -22,3 +29,13 @@ command syntax
 example programs
 guide to source code
 html page with instructions
+
+ideas:
+get current path (installer???)
+syscalls:
+  exit
+  read/write   byte half word   format
+		string        length vs null termination
+status: running vs waiting (allows for implementation of waiting for user input)
+fix console as monospace??
+generate report, not emulate
