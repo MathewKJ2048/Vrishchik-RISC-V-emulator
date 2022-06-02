@@ -1,0 +1,4 @@
+.data
+s:
+.ascii "\""
+.code
