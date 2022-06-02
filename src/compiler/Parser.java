@@ -98,29 +98,33 @@ public class Parser // similar to Scanner class
         for(int i=0;i<id.length;i++)s=s.replace(id[i],"");
         return Long.parseLong(s,base);
     }
-    public static String processString(String s) throws Exception
+    public static String processString(String s) throws Exception // raw source code is input, string which it represents in output
     {
-        s = s.substring(1,s.length()-1);
+        s = s.substring(1,s.length()-1); // removing quotes
         StringBuilder v = new StringBuilder();
         for(int i=0;i<s.length();i++)
         {
             char d = s.charAt(i);
-            if(d==Syntax.STRING_ESCAPE_CHAR)
+            if(d==Syntax.STRING_ESCAPE_CHAR) // the next character is an escape character
             {
                 i++;
                 d = s.charAt(i);
-                if(d == Syntax.NEWLINE)v.append(System.lineSeparator());
-                else if(d == Syntax.ASCII_CHAR)
+                if(d == Syntax.NEWLINE)v.append(System.lineSeparator()); // for '\n'
+                else if(d == Syntax.ASCII_CHAR) // this means that the ascii value is a three digit number which follows
                 {
-                    char h = s.charAt(++i);
-                    char t = s.charAt(++i);
-                    char o = s.charAt(++i);
+                    char h = s.charAt(++i); // hundreds
+                    char t = s.charAt(++i); // tens
+                    char o = s.charAt(++i); // ones
                     if(!(Syntax.is_number(h)&&Syntax.is_number(t)&&Syntax.is_number(o)))throw new Exception("Number expected in ascii escape sequence");
                     v.append(""+(100*h+10*t+o));
                 }
-                else v.append(Syntax.get_value_of(d));
+                else
+                {
+                    char x = Syntax.escape_sequences.get(d);
+                    v.append(x);
+                }
             }
-            else
+            else  // normal character
             {
                 v.append(d);
             }

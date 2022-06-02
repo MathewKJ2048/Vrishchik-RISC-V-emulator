@@ -1,6 +1,7 @@
 package compiler;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -449,32 +450,24 @@ public class Syntax
     // / functions as an escape sequence indicator
     public static final char NEWLINE = 'n';
     public static final char ASCII_CHAR = 'a';
-    record Escape_sequence(char sequence,int ascii)
+    public static final HashMap<Character,Character> escape_sequences = get_ASCII_HashMap();
+    public static HashMap<Character,Character> get_ASCII_HashMap()
     {
-    }
-    public static final List<Escape_sequence> es = get_escape_sequences();
-    private static List<Escape_sequence> get_escape_sequences()
-    {
-        List<Escape_sequence> l = new ArrayList<>();
-        l.add(new Escape_sequence('0',0));//null character
-        l.add(new Escape_sequence('\\',92));//backslash
-        l.add(new Escape_sequence('"',34));//double quote
-        l.add(new Escape_sequence('b',40));//backspace
-        l.add(new Escape_sequence('t',41));//horizontal tab
-        l.add(new Escape_sequence('\'',39));//single quote
-        l.add(new Escape_sequence('r',13));//carriage return
-        l.add(new Escape_sequence('f',12));//formfeed
-        l.add(new Escape_sequence('v',11));//vertical tab
-        l.add(new Escape_sequence('?',63));//question mark
-        l.add(new Escape_sequence('a',7));//bell
-        l.add(new Escape_sequence('#','#'));//hash
-        //l.add(new Escape_sequence('',));
-        return l;
-    }
-    public static int get_value_of(char sequence) throws Exception
-    {
-        for(Escape_sequence e : es)if(e.sequence == sequence)return e.ascii;
-        throw new Exception("Unidentified escape sequence");
+        HashMap<Character,Character> m = new HashMap<>();
+        m.put('0',(char)0);//null character
+        m.put('\\',(char)92);//backslash
+        m.put('"',(char)34);//double quote
+        m.put('b',(char)40);//backspace
+        m.put('t',(char)41);//horizontal tab
+        m.put('\'',(char)39);//single quote
+        m.put('r',(char)13);//carriage return
+        m.put('f',(char)12);//formfeed
+        m.put('v',(char)11);//vertical tab
+        m.put('?',(char)63);//question mark
+        m.put('a',(char)7);//bell
+        m.put('#','#');//hash
+        //m.put('',));
+        return m;
     }
     public static boolean is_printable_ASCII(char ch)
     {

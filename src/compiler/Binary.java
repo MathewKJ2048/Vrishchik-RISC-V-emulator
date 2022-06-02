@@ -379,7 +379,7 @@ public class Binary
             String RS1_name = Syntax.name_of_register((int)from_binary_unsigned(RS1));
             String immediate = extract_bits(31,20,instruction,31,0);
             String val;
-            if(OPCODE.equals("0010011") && (funct3.equals("001")|| funct3.equals("101")))
+            if(OPCODE.equals("0010011") && (funct3.equals("001")|| funct3.equals("101"))) //shamt type
                 val=convert(from_binary_unsigned(immediate.substring(7)),false,base,32);//TODO why 32?
             else val=convert(from_binary_signed(immediate),true,base,32);// TODO why 32?
             val+="_"+Syntax.get_id_of_base(base);
@@ -430,10 +430,24 @@ public class Binary
         else if(OPCODE.equals("0110111")||OPCODE.equals("0010111"))
         {
             //U_TYPE;
+            String RD = extract_bits(11,7,instruction,31,0);
+            String RD_name = Syntax.name_of_register((int)from_binary_unsigned(RD));
+            String immediate = extract_bits(31,12,instruction,31,0);
+            String value = convert(from_binary_signed(immediate)+code_current,true,base,32);
+            String word = OPCODE.equals("0110111")?Syntax.LUI.words[0]:Syntax.AUIPC.words[0];
+            command.append(word+" "+RD_name+","+value);
         }
         else if(OPCODE.equals("1101111"))
         {
             //J_TYPE;
+            String RD = extract_bits(11,7,instruction,31,0);
+            String RD_name = Syntax.name_of_register((int)from_binary_unsigned(RD));
+            String immediate = extract_bits(31,31,instruction,31,0)+
+                    extract_bits(19,12,instruction,31,0)+
+                    extract_bits(20,20,instruction,31,0)+
+                    extract_bits(30,21,instruction,31,0);
+            String value = convert(from_binary_signed(immediate)+code_current,true,base,32);
+            command.append(Syntax.JAL.words[0]+" "+RD_name+","+value);
         }
         else throw new Exception("unrecognized opcode");
         return command.toString();

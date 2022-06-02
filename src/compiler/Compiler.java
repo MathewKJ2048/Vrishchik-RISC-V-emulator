@@ -28,14 +28,16 @@ public class Compiler
         public String get_labels()
         {
             this.labels = new StringBuilder();
-            this.labels.append("\ndata labels:\n");
+            this.labels.append("\ndata labels:");
             for (Label label : l_ld) {
-                transcript.labels.append("\n").append(label.name).append(" refers to data location: ").append(label.address);
+                transcript.labels.append("\n").append("\""+label.name+"\"").append(" refers to data location: ").append(label.address);
             }
-            this.labels.append("\ncode labels:\n");
+            if(l_ld.size() == 0)this.labels.append(" none");
+            this.labels.append("\n\ncode labels:");
             for (Label label : l_lc) {
-                transcript.labels.append("\n").append(label.name).append(" refers to PC location: ").append(label.address);
+                transcript.labels.append("\n").append("\""+label.name+"\"").append(" refers to PC location: ").append(label.address);
             }
+            if(l_lc.size() == 0)this.labels.append(" none");
             return this.labels.toString();
         }
         public String get_scrubbed_code()
@@ -405,7 +407,7 @@ public class Compiler
                             throw new Exception(e.getMessage()+"\nliteral missing in line "+data_section.get_number(sc.start()));
                         }
                     }
-                    else if(Syntax.ALIGN.contains(type))
+                    else if(Syntax.ALIGN.contains(type)) // this is an instruction to the compiler, no associated binary
                     {
                         try
                         {
@@ -424,7 +426,7 @@ public class Compiler
                         try
                         {
                             String s = sc.next();
-                            System.out.println("input string"+"|"+s+"|");
+                            System.out.println("input string "+"|"+s+"|");
                             String value = Parser.processString(s);
                             if(Syntax.ASCIIZ.contains(type))value+='\u0000';
                             int n = value.length();
@@ -433,7 +435,7 @@ public class Compiler
                                 char d = value.charAt(i);
                                 l_pc.add(new Instruction(Binary.addi(0, 5, d), code_current, (Syntax.is_printable_ASCII(d)?("'"+d+"'"):(""+((int)d))) + " " + Syntax.ADDI.words[0]));
                                 code_current+=4;
-                                l_pc.add(new Instruction(Binary.sb(5, 0, data_current), code_current, (Syntax.is_printable_ASCII(d)?("'"+d+"'"):(""+((int)d))) + " " + Syntax.SB.words[0]));
+                                l_pc.add(new Instruction(Binary.sb(0, 5, data_current), code_current, (Syntax.is_printable_ASCII(d)?("'"+d+"'"):(""+((int)d))) + " " + Syntax.SB.words[0]));
                                 code_current+=4;
                                 l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, (Syntax.is_printable_ASCII(d)?("'"+d+"'"):(""+((int)d))) + " " + Syntax.ANDI.words[0]));
                                 code_current+=4;
