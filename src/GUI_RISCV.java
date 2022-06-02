@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -77,6 +78,7 @@ public class GUI_RISCV extends JFrame
         setRegisters();
         this.memorySizeComboBox.setSelectedItem("word");
         setMemory();
+        try{paintMemory(1);}catch(Exception e){}
     }
     public static void load_preferences()
     {
@@ -147,11 +149,7 @@ public class GUI_RISCV extends JFrame
             }
             else
             {
-                int base = -1;
-                if(option.equals("binary"))base=2;
-                else if(option.equals("octal"))base=8;
-                else if(option.equals("decimal"))base=10;
-                else if(option.equals("hexadecimal"))base=16;
+                int base = get_base(option);
                 if(base==-1)this.registersTextArea.setText("Unrecognized base");
                 s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base,32); //register size is always 32 bits
             }
@@ -159,12 +157,11 @@ public class GUI_RISCV extends JFrame
         }
         this.registersTextArea.setText(b.toString());
     }
+    List<String> memory;
     private void setMemory()
     {
-        int size = 1;
-        if(memorySizeComboBox.getSelectedItem().equals("half"))size=2;
-        else if(memorySizeComboBox.getSelectedItem().equals("word"))size=4;
-        StringBuilder b = new StringBuilder();
+        memory = new ArrayList<>();
+        int size = get_size(memorySizeComboBox.getSelectedItem().toString());
         for(int i=0;i<processor.Processor.get_memory_size()/size;i++)
         {
             int value=0;
@@ -182,17 +179,38 @@ public class GUI_RISCV extends JFrame
             }
             else
             {
-                int base = -1;
-                if(option.equals("binary"))base=2;
-                else if(option.equals("octal"))base=8;
-                else if(option.equals("decimal"))base=10;
-                else if(option.equals("hexadecimal"))base=16;
+                int base = get_base(option);
                 if(base==-1)this.memoryTextArea.setText("Unrecognized base");
                 s = compiler.Binary.convert(value,memorySignedRadioButton.isSelected(),base,8*size);
             }
-            b.append("["+(size*i+size-1)+":"+(size*i)+"]\t"+s+"\n");
+            String index = "["+(size*i+size-1)+":"+(size*i)+"]";
+            memory.add(index+(index.length()>=8?"":"\t")+"\t"+s+"\n");
         }
+    }
+    public static int get_base(String option)
+    {
+        if(option.equals("binary"))return 2;
+        else if(option.equals("octal"))return 8;
+        else if(option.equals("decimal"))return 10;
+        else if(option.equals("hexadecimal"))return 16;
+        return -1;
+    }
+    public static final int MEMORY_TEXT_AREA_LENGTH = 32;
+    public void paintMemory(int num) throws Exception
+    {
+        int size = MEMORY_TEXT_AREA_LENGTH;
+        int start = (num-1)*size;
+        int end = (num)*size;
+        StringBuilder b = new StringBuilder("");
+        for(int i=start;i<end;i++)b.append(memory.get(i));
         memoryTextArea.setText(b.toString());
+    }
+    public int get_size(String s)
+    {
+        if(s.equals("byte"))return 1;
+        if(s.equals("half"))return 2;
+        else if(s.equals("word"))return 4;
+        return 0;
     }
     public GUI_RISCV(String title)
     {
@@ -230,7 +248,7 @@ public class GUI_RISCV extends JFrame
             if(rv == JFileChooser.APPROVE_OPTION)
             {
                 compilation_source_file = filechooser.getSelectedFile();
-                compileFilenameTextField.setText(compilation_source_file.getName());
+                compileFilenameTextField.setText(compilation_source_file.getAbsolutePath());
                 compileButton.setEnabled(true);
             }
         });
@@ -277,6 +295,7 @@ public class GUI_RISCV extends JFrame
                 executeButton.setEnabled(true);
             }
         });
+        final int[] memory_page = {1}; // an array is used here because it is accessed from inner class
         executeButton.addActionListener(e -> {
             try
             {
@@ -285,6 +304,7 @@ public class GUI_RISCV extends JFrame
                 processor.Processor.execute_all();
                 setRegisters();
                 setMemory();
+                paintMemory(memory_page[0]);
             }
             catch(Exception ex)
             {
@@ -330,8 +350,13 @@ public class GUI_RISCV extends JFrame
             {
                 String name = compilation_source_file.getName();
                 name = name.substring(0,name.indexOf("."+filetypeTextField.getText()));
-                compiler.Compiler.write(Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin"));
-                JOptionPane.showMessageDialog(CreateBinaryButton,name+".bin has been generated and stored in "+compilation_source_file.getParent());
+                Path destination = Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin");
+                if(destination.toFile().exists()) // allows user to confirm overwriting on existing file
+                {
+                    if(JOptionPane.showConfirmDialog(compileTab,name+".bin already exists.\nWould you like to overwrite it?")!=JOptionPane.YES_OPTION)return;
+                }
+                compiler.Compiler.write(destination);
+                JOptionPane.showMessageDialog(compileTab,name+".bin has been generated and stored in \n"+compilation_source_file.getParent());
             }
             catch(Exception ex)
             {
@@ -340,9 +365,15 @@ public class GUI_RISCV extends JFrame
         });
         clearRegistersButton.addActionListener(e -> {
                     processor.Processor.reset_registers();
+                    setRegisters();
                 });
         clearMemoryButton.addActionListener(e -> {
                     processor.Processor.reset_memory();
+                    setMemory();
+                    try
+                    {
+                        paintMemory(memory_page[0]);
+                    }catch(Exception ex){}
                 });
         memoryFormatComboBox.addActionListener(e -> {
             if(memoryFormatComboBox.getSelectedItem().equals("ASCII"))
@@ -357,6 +388,7 @@ public class GUI_RISCV extends JFrame
                 memorySignedRadioButton.setEnabled(true);
             }
             setMemory();
+            try{paintMemory(memory_page[0]);}catch(Exception ignored){}
         });
         processorResetButton.addActionListener(e -> {
             execution_source_file = null;
@@ -365,8 +397,37 @@ public class GUI_RISCV extends JFrame
             processor.Processor.reset_instruction();
 
         });
-        memorySignedRadioButton.addActionListener(e -> {setMemory();});
-        memorySizeComboBox.addActionListener(e -> {setMemory();});
+        memorySignedRadioButton.addActionListener(e -> {setMemory();try{paintMemory(memory_page[0]);}catch(Exception ex){}});
+        memorySizeComboBox.addActionListener(e -> {
+            setMemory();
+            memory_page[0] =1;
+            try
+            {
+                paintMemory(memory_page[0]);
+            }catch(Exception ex){}});
+
+        memoryForwardButton.addActionListener(e -> {
+            try
+            {
+                paintMemory(memory_page[0]+1);
+                memory_page[0]++;
+            }
+            catch(Exception ex){}
+        });
+        memoryBackwardButton.addActionListener(e -> {
+            try
+            {
+                paintMemory(memory_page[0]-1);
+                memory_page[0]--;
+            }
+            catch(Exception ex){}
+        });
+        memoryAllBackwardButton.addActionListener(e -> {
+            memory_page[0]=1;try{paintMemory(memory_page[0]);}catch(Exception ignore){}
+        });
+        memoryAllForwardButton.addActionListener(e -> {
+            memory_page[0]=memory.size()/MEMORY_TEXT_AREA_LENGTH;try{paintMemory(memory_page[0]);}catch(Exception ignore){}
+        });
     }
     private JFrame main = this;
     private static String file_type = "s";
@@ -433,6 +494,10 @@ public class GUI_RISCV extends JFrame
     private JButton resetButton;
     private JButton CreateBinaryButton;
     private JButton processorResetButton;
+    private JButton memoryBackwardButton;
+    private JButton memoryForwardButton;
+    private JButton memoryAllBackwardButton;
+    private JButton memoryAllForwardButton;
     private JButton filetypeChangeButton;
 }
 
