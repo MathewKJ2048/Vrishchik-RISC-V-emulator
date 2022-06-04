@@ -1,0 +1,2 @@
+lh producing all 1s in certain left half of register
+li not working properly (test cases: FFFFFFFF, DEADBEEF)
