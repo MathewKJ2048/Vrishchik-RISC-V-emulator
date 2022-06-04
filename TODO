@@ -2,7 +2,6 @@ ECALLs (come up with calling codes)
 pipelining
 data forwarding
 deal with data integration (stack pointer)
-long immediates pseudo decomposition compiler
 
 GUI:
 font adjustor
