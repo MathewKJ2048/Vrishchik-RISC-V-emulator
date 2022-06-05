@@ -45,11 +45,6 @@ public class Processor{
             O.WB();
         }
         System.out.println("Execution complete");
-        for(int i=0;i<D.Mem.length;i++)
-        {
-            if(D.Mem[i]!=null && D.Mem[i].byteValue()!=0)System.out.println("non-0 memory");
-        }
-        System.out.println("Memory check complete");
     }
     public static void execute_step(){
         O.IF();
@@ -69,7 +64,7 @@ public class Processor{
         return D.PC;
     }
     public static boolean is_over(){
-        if(D.PC>=i/4){
+        if(D.PC>=i){
             return true;
         }
         return false;
@@ -86,11 +81,18 @@ public class Processor{
             D.Mem[index]=0;
         }
     }
-    public static void reset_instruction(){
+    private static boolean has_instructions = false;
+    public static boolean has_instructions()
+    {
+        return has_instructions;
+    }
+    public static void reset_instruction()
+    {
         int index;
         for(index=0;index<1024;index++){
             D.InstrMem[index]=0;
         }
+        has_instructions = false;
     }
     public static void Read(byte[] binary) throws Exception
     {
@@ -100,6 +102,7 @@ public class Processor{
         for(int i=0;i<binary.length;i++)System.out.println("Instruction "+i+" :"+Integer.toBinaryString((binary[i] & 0xFF) + 0x100).substring(1));
         D.PC = 0;
         Processor.i = binary.length;
+        has_instructions = true;
         /*
         int i=0;
         File filescan = new File(addr);
