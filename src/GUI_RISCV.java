@@ -1,10 +1,9 @@
+import compiler.Decompiler;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -119,6 +118,18 @@ public class GUI_RISCV extends JFrame
             JOptionPane.showMessageDialog(new JFrame(),"config.json not found, using default settings","Warning",JOptionPane.WARNING_MESSAGE);
         }
     }
+    public void set_execution_code()
+    {
+        int PC_current = processor.Processor.has_instructions()?processor.Processor.PC():0;
+        StringBuilder b = new StringBuilder();
+        b.append("\tPC\t"+decompiled_binary.get(0)+"\n");
+        for(int i=1;i<decompiled_binary.size();i++)
+        {
+            String pointer = (4*(i-1)==PC_current)?"=>":"";
+            b.append(pointer+"\t"+(4*(i-1))+"\t"+decompiled_binary.get(i)+"\n");
+        }
+        codeTextArea.setText(b.toString());
+    }
     public void save_and_exit()
     {
         file_type = filetypeTextField.getText();
@@ -227,7 +238,50 @@ public class GUI_RISCV extends JFrame
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.pack();
         this.setVisible(true);
+        class Control
+        {
+            public volatile boolean is_active = false;
+            public volatile boolean to_execute = false;
+            public volatile boolean to_execute_all = false;
+            public volatile int memory_page = 1;
+        }
+        final Control control = new Control();
+        class ExecutionThread extends Thread
+        {
+            @Override
+            public void run()
+            {
+                while(control.is_active)
+                {
+                    if(control.to_execute)
+                    {
+                        try
+                        {
+                            if(processor.Processor.is_over()) //TODO look into case where null file is given
+                            {
+                                executeStepButton.setEnabled(false);   // these must happen only in the case processor is over, not just if thread dies
+                                executeAllButton.setEnabled(false);
+                                break;
+                            }
+                            processor.Processor.execute_step();
+                            setRegisters();
+                            setMemory();
+                            try{paintMemory(control.memory_page);}catch(Exception ex){}
+                            set_execution_code();
+                            control.to_execute=control.to_execute_all; // this decides whether the execution continues or not
+                            if(processor.Processor.is_over())
+                            {
 
+                                executeStepButton.setEnabled(false);
+                                executeAllButton.setEnabled(false);
+                                break;
+                            }
+                        }
+                        catch (Exception ingnored){}
+                    }
+                }
+            }
+        }
         directoryChangeButton.addActionListener(e -> {
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int rv = fc.showOpenDialog(GUI_RISCV.this);
@@ -292,23 +346,46 @@ public class GUI_RISCV extends JFrame
             {
                 execution_source_file = filechooser.getSelectedFile();
                 executeFilenameTextField.setText(execution_source_file.getName());
-                executeButton.setEnabled(true);
+                try
+                {
+                    execution_binary = Files.readAllBytes(Paths.get(execution_source_file.getAbsolutePath()));
+                    Decompiler.decompile(execution_binary,16);//TODO look into option to set base
+                    decompiled_binary = Decompiler.get_source_lines();
+                    set_execution_code();
+                    processor.Processor.Read(execution_binary);
+                    executionStatusLabel.setText("Running");
+                    executeLoadButton.setEnabled(false);
+                    control.is_active = true;
+                    executeStepButton.setEnabled(true);
+                    executeAllButton.setEnabled(true);
+                    System.out.println("before creation of new thread:"+processor.Processor.PC());
+                    ExecutionThread et = new ExecutionThread();
+                    et.start();
+                }
+                catch (Exception ex)
+                {
+                    JOptionPane.showMessageDialog(executionTab,ex.getStackTrace(),"Error",JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
-        final int[] memory_page = {1}; // an array is used here because it is accessed from inner class
-        executeButton.addActionListener(e -> {
+        executeStepButton.addActionListener(e -> {
             try
             {
-                byte[] binary = Files.readAllBytes(Paths.get(execution_source_file.getAbsolutePath()));
-                processor.Processor.Read(binary);
-                processor.Processor.execute_all();
+                System.out.println(control.to_execute);
+                control.to_execute = true;
+                /*
+                processor.Processor.execute_step();
                 setRegisters();
                 setMemory();
                 paintMemory(memory_page[0]);
+                set_execution_code();
+
+                if(processor.Processor.is_over())executeStepButton.setEnabled(false);
+                */
             }
             catch(Exception ex)
             {
-                JOptionPane.showMessageDialog(compileTab,ex.getStackTrace(),"Error",JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(executionTab,ex.getStackTrace(),"Error",JOptionPane.ERROR_MESSAGE);
             }
         });
         registersSignedRadioButton.addActionListener(e -> setRegisters());
@@ -372,7 +449,7 @@ public class GUI_RISCV extends JFrame
                     setMemory();
                     try
                     {
-                        paintMemory(memory_page[0]);
+                        paintMemory(control.memory_page);
                     }catch(Exception ex){}
                 });
         memoryFormatComboBox.addActionListener(e -> {
@@ -388,46 +465,63 @@ public class GUI_RISCV extends JFrame
                 memorySignedRadioButton.setEnabled(true);
             }
             setMemory();
-            try{paintMemory(memory_page[0]);}catch(Exception ignored){}
+            try{paintMemory(control.memory_page);}catch(Exception ignored){}
         });
         processorResetButton.addActionListener(e -> {
+            control.is_active = false; // this ensure that the current thread dies
+            control.to_execute = false;
+            control.to_execute_all = false;
             execution_source_file = null;
+            execution_binary = null;
+            decompiled_binary = null;
+            codeTextArea.setText("");
             executeFilenameTextField.setText("");
-            executeButton.setEnabled(false);
+            executeStepButton.setEnabled(false);
+            executeAllButton.setEnabled(false);
+            executeLoadButton.setEnabled(true);
             processor.Processor.reset_instruction();
-
+            executionStatusLabel.setText("Waiting");
         });
-        memorySignedRadioButton.addActionListener(e -> {setMemory();try{paintMemory(memory_page[0]);}catch(Exception ex){}});
+        memorySignedRadioButton.addActionListener(e -> {setMemory();try{paintMemory(control.memory_page);}catch(Exception ex){}});
         memorySizeComboBox.addActionListener(e -> {
             setMemory();
-            memory_page[0] =1;
+            control.memory_page =1;
             try
             {
-                paintMemory(memory_page[0]);
+                paintMemory(control.memory_page);
             }catch(Exception ex){}});
 
         memoryForwardButton.addActionListener(e -> {
             try
             {
-                paintMemory(memory_page[0]+1);
-                memory_page[0]++;
+                paintMemory(control.memory_page+1);
+                control.memory_page++;
             }
             catch(Exception ex){}
         });
         memoryBackwardButton.addActionListener(e -> {
             try
             {
-                paintMemory(memory_page[0]-1);
-                memory_page[0]--;
+                paintMemory(control.memory_page-1);
+                control.memory_page--;
             }
             catch(Exception ex){}
         });
         memoryAllBackwardButton.addActionListener(e -> {
-            memory_page[0]=1;try{paintMemory(memory_page[0]);}catch(Exception ignore){}
+            control.memory_page=1;try{paintMemory(control.memory_page);}catch(Exception ignore){}
         });
         memoryAllForwardButton.addActionListener(e -> {
-            memory_page[0]=memory.size()/MEMORY_TEXT_AREA_LENGTH;try{paintMemory(memory_page[0]);}catch(Exception ignore){}
+            control.memory_page=memory.size()/MEMORY_TEXT_AREA_LENGTH;try{paintMemory(control.memory_page);}catch(Exception ignore){}
         });
+        executeAllButton.addActionListener(e -> {
+            executeStepButton.setEnabled(false);
+            executeAllButton.setEnabled(false);
+            control.to_execute_all = true;
+            control.to_execute = true;
+        });
+        //
+        threadButton.addActionListener(e -> textArea1.setText("number of active threads:"+Thread.activeCount()));
+        PCButton.addActionListener(e -> textArea2.setText("PC:"+processor.Processor.PC()));
     }
     private JFrame main = this;
     private static String file_type = "s";
@@ -437,8 +531,10 @@ public class GUI_RISCV extends JFrame
     {
         return look_and_feel;
     }
-    private File compilation_source_file;
-    private File execution_source_file;
+    private File compilation_source_file = null;
+    private File execution_source_file = null;
+    private byte[] execution_binary = null;
+    private List<String> decompiled_binary = null;
     private String registersFormat;
     private String memoryFormat;
     private String memorySize;
@@ -477,10 +573,9 @@ public class GUI_RISCV extends JFrame
     private JButton clearRegistersButton;
     private JButton clearMemoryButton;
     private JComboBox memorySizeComboBox;
-    private JTextArea executionTextArea;
     private JTextField executeFilenameTextField;
     private JButton executeLoadButton;
-    private JButton executeButton;
+    private JButton executeStepButton;
     private JPanel executeChooserPane;
     private JTextArea registersTextArea;
     private JTextArea memoryTextArea;
@@ -498,7 +593,25 @@ public class GUI_RISCV extends JFrame
     private JButton memoryForwardButton;
     private JButton memoryAllBackwardButton;
     private JButton memoryAllForwardButton;
+    private JTabbedPane executionTabbedPane;
+    private JPanel consoleJPanel;
+    private JPanel codeJPanel;
+    private JPanel pipelineJPanel;
+    private JTextArea consoleTextArea;
+    private JTextArea codeTextArea;
+    private JTextArea pipelineTextArea;
+    private JLabel executionStatusLabel;
+    private JButton executeAllButton;
+    private JButton button1;
+    private JButton threadButton;
+    private JTabbedPane tabbedPane4;
+    private JButton PCButton;
+    private JTextArea textArea1;
+    private JTextArea textArea2;
+    private JTextArea textArea3;
+    private JTextArea textArea4;
     private JButton filetypeChangeButton;
+
 }
 
 

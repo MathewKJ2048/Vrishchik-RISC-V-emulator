@@ -14,7 +14,6 @@ public class Main
 {
     public static void main(String[] args) throws Exception {
 
-
         GUI_check();
     }
     public static void GUI_check() throws Exception
