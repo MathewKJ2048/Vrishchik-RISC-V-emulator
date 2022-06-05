@@ -145,8 +145,8 @@ public class Syntax
     public static final Keyword DECI = new Keyword(new String[]{"deci"});
     public static final Keyword CLR = new Keyword(new String[]{"clr"});
     public static final Keyword NOT = new Keyword(new String[]{"not"});
-    public static final Keyword NOTI = new Keyword(new String[]{"inv"});
-    public static final Keyword J = new Keyword(new String[]{"j,jump"});
+    public static final Keyword NOTI = new Keyword(new String[]{"noti","inv"});
+    public static final Keyword J = new Keyword(new String[]{"j","jmp"});
     public static final Keyword JR = new Keyword(new String[]{"jr"});
     public static final Keyword RET = new Keyword(new String[]{"ret"});
     public static final Keyword NOP = new Keyword(new String[]{"nop"});
@@ -246,7 +246,7 @@ public class Syntax
         l.add(new Command(AUIPC,U_TYPE,Ri));
         l.add(new Command(INCI,PSEUDO_TYPE,Ri));
         l.add(new Command(DECI,PSEUDO_TYPE,Ri));
-        l.add(new Command(LI,PSEUDO_TYPE,Ri));
+        l.add(new Command(LI,PSEUDO_TYPE,Ri,2)); // each li is composed of an addi (for lower) and a lui (for upper)
         l.add(new Command(BEQZ,PSEUDO_TYPE,Ri));
         l.add(new Command(BNEZ,PSEUDO_TYPE,Ri));
         l.add(new Command(BLTZ,PSEUDO_TYPE,Ri));

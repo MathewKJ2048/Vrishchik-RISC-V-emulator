@@ -210,6 +210,8 @@ public class Compiler
     public static void compile(List<String> l_raw) throws Exception
     {
         reset();
+        System.out.println(Syntax.J.contains("j"));
+        System.out.println("type is:"+(int)(Syntax.get_input_type_of_command("j")));
         for(int i = 0;i< l_raw.size();i++)
         {
             raw.append(l_raw.get(i)+Syntax.WHITESPACE,i+1);
@@ -836,11 +838,18 @@ public class Compiler
                         int src_add = process_register(sc.next(),sc,"",transcript);
                         if(!sc.is_next_argument())throw new Exception("missing argument in line "+code_section.numbers.get(sc.start()));
                         long value = process_immediate(sc.next(),sc,transcript);
+                        System.out.println("value is:"+ value);
                         if(sc.is_next_argument())throw new Exception("too many arguments for "+token+" in line "+code_section.numbers.get(sc.start()));
                         // (inci deci) li (beqz bnez bltz bgez blez bgtz) (lui auipc)
                         if(Syntax.LI.contains(token))
                         {
-                            l_pc.add(new Instruction(Binary.addi(0,src_add,value), code_current,Syntax.LI.words[0]+" "+Syntax.ADDI.words[0]));
+                            System.out.println("LI identified");
+                            String binary = Binary.to_binary_unsigned(value,32);
+                            System.out.println("binary is:"+binary);
+                            String upper = binary.substring(0,20);
+                            String lower = binary.substring(21);
+                            l_pc.add(new Instruction(Binary.lui(src_add,Binary.from_binary_signed(upper)), code_current,Syntax.LI.words[0]+" "+Syntax.LUI.words[0]));
+                            l_pc.add(new Instruction(Binary.addi(0,src_add,Binary.from_binary_signed(lower)), code_current,Syntax.LI.words[0]+" "+Syntax.ADDI.words[0]));
                         }
                         else if(Syntax.INCI.contains(token))
                         {
@@ -922,10 +931,12 @@ public class Compiler
                 {
                     try
                     {
+                        System.out.println("type");
                         long value = process_immediate(sc.next(),sc,transcript);
                         if(sc.is_next_argument())throw new Exception("too many arguments for "+token+" in line "+code_section.numbers.get(sc.start()));
                         if(Syntax.J.contains(token))
                         {
+                            System.out.println("type2");
                             l_pc.add(new Instruction(Binary.jal(0,value-code_current), code_current,Syntax.J.words[0]+" "+Syntax.JAL.words[0]));
                         }
                         else throw new Exception("command type mismatch in line "+code_section.numbers.get(sc.start()));
@@ -1025,7 +1036,7 @@ public class Compiler
                 }
             }
             else if(Syntax.is_label(token))transcript.append("\ncode label");
-            else throw new Exception("unrecognized token in line "+code_section.numbers.get(sc.start()));
+            else throw new Exception("unrecognized token"+Syntax.get_input_type_of_command(token)+"\""+token+"\" in line "+code_section.numbers.get(sc.start()));
         }
     }
 

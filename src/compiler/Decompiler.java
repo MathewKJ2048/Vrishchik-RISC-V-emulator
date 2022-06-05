@@ -17,6 +17,10 @@ public class Decompiler
     {
         return source.size();
     }
+    public static List<String> get_source_lines()
+    {
+        return source;
+    }
     public static String get_source()
     {
         StringBuilder src = new StringBuilder();
