@@ -1,5 +1,0 @@
-.code
-addi $t0, $t0, 2
-addi $t1, $t1, 3
-add $t2, $t1, $t0
-# this should make $t0 take the value 5
