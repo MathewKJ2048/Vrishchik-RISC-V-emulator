@@ -5,17 +5,10 @@ deal with data integration (stack pointer)
 
 GUI:
 font adjustor
-info revamp
-button placement
-step-execution
-decompiling, pointing
+button placement for licence accepting
 icon design
-console placement
-load file for processor causing decompilation
-arrow pointer
-run processor in different thread
-execution idempotence (Don't keep creating new threads)
-auto-open console
+data forwarding checkbox
+switch to code upon load
 
 Documentation:
 features
