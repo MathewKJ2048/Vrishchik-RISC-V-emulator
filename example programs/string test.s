@@ -1,4 +1,4 @@
 .data
 s:
-.ascii "\""
+.ascii "Hello World"
 .code
