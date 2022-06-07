@@ -125,7 +125,7 @@ class Operations{
             //D.R[IDRF_BUFF[1]]=rs1-rs2;
 
         } else if (op == 2) {
-            EXE_BUFF.exe1 = rs1 << (rs2) / 32;
+            EXE_BUFF.exe1 = rs1 << (rs2);
             //D.R[IDRF_BUFF[1]]=rs1<<(rs2)/32;
 
         } else if (op == 3) {
@@ -153,16 +153,16 @@ class Operations{
             //D.R[IDRF_BUFF[1]] = rs1^rs2;
 
         } else if (op == 6) {
-            EXE_BUFF.exe1 = rs1 >> (rs2) / 32;
+            EXE_BUFF.exe1 = rs1 >> (rs2);
             //D.R[IDRF_BUFF[1]]=rs1>>(rs2)/32;
 
         } else if (op == 7) {
             if (D.R[IDRF_BUFF.arr[1]] > 0) {
-                EXE_BUFF.exe1 = rs1 >> (rs2) / 32;
+                EXE_BUFF.exe1 = rs1 >> (rs2);
                 //D.R[IDRF_BUFF[1]]=rs1>>(rs2)/32;
 
             } else {
-                EXE_BUFF.exe1 = -(rs1 >> (rs2) / 32);
+                EXE_BUFF.exe1 = -(rs1 >> (rs2));
                 //D.R[IDRF_BUFF[1]]=-(rs1>>(rs2)/32);
             }
 
@@ -250,8 +250,8 @@ class Operations{
         } else if (op == 26) {
             EXE_BUFF.exe1 = offset2 + rs1;
 
-        } else if (op == 33) {
-            EXE_BUFF.exe1 = UTIL.SignToDecimal(S.substring(0, 20));
+        } else if (op == 33) { // TODO look into this, this is LUI
+            EXE_BUFF.exe1 = UTIL.SignToDecimal(S.substring(0, 20)) << (12);
             // D.R[IDRF_BUFF[1]]=UTIL.SignToDecimal(S.substring(0,20));
 
         }
