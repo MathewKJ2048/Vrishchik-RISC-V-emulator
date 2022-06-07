@@ -83,7 +83,7 @@ public class GUI_RISCV extends JFrame
     {
         /*
         try to open config.json
-        if not found, abort
+        if not found, ask if one can be created.
         else
         String file type
         String default path (check if it exists, if not use system default)
@@ -304,6 +304,7 @@ public class GUI_RISCV extends JFrame
                 compilation_source_file = filechooser.getSelectedFile();
                 compileFilenameTextField.setText(compilation_source_file.getAbsolutePath());
                 compileButton.setEnabled(true);
+                compileLoadButton.setEnabled(false);
             }
         });
         compileButton.addActionListener(e -> {
@@ -349,12 +350,13 @@ public class GUI_RISCV extends JFrame
                 try
                 {
                     execution_binary = Files.readAllBytes(Paths.get(execution_source_file.getAbsolutePath()));
-                    Decompiler.decompile(execution_binary,16);//TODO look into option to set base
+                    Decompiler.decompile(execution_binary,10);//TODO look into option to set base
                     decompiled_binary = Decompiler.get_source_lines();
                     set_execution_code();
                     processor.Processor.Read(execution_binary);
                     executionStatusLabel.setText("Running");
                     executeLoadButton.setEnabled(false);
+                    dataForwardingRadioButton.setEnabled(false);
                     control.is_active = true;
                     executeStepButton.setEnabled(true);
                     executeAllButton.setEnabled(true);
@@ -415,6 +417,7 @@ public class GUI_RISCV extends JFrame
             labelsTextArea.setText("");
             compileButton.setEnabled(false);
             CreateBinaryButton.setEnabled(false);
+            compileLoadButton.setEnabled(true);
             compiler.Compiler.reset();
         });
         CreateBinaryButton.addActionListener(e -> {
@@ -479,6 +482,7 @@ public class GUI_RISCV extends JFrame
             executeStepButton.setEnabled(false);
             executeAllButton.setEnabled(false);
             executeLoadButton.setEnabled(true);
+            dataForwardingRadioButton.setEnabled(true);
             processor.Processor.reset_instruction();
             executionStatusLabel.setText("Waiting");
         });
@@ -543,9 +547,7 @@ public class GUI_RISCV extends JFrame
     private JPanel infoTab;
     private JPanel compileTab;
     private JPanel executionTab;
-    private JPanel DataTab;
     private JPanel helpTab;
-    private JTabbedPane tabbedPane2;
     private JTabbedPane tabbedPane3;
     private JTabbedPane compileOutputTabbedPane;
     private JButton compileButton;
@@ -576,7 +578,6 @@ public class GUI_RISCV extends JFrame
     private JTextField executeFilenameTextField;
     private JButton executeLoadButton;
     private JButton executeStepButton;
-    private JPanel executeChooserPane;
     private JTextArea registersTextArea;
     private JTextArea memoryTextArea;
     private JRadioButton registersSignedRadioButton;
@@ -593,13 +594,7 @@ public class GUI_RISCV extends JFrame
     private JButton memoryForwardButton;
     private JButton memoryAllBackwardButton;
     private JButton memoryAllForwardButton;
-    private JTabbedPane executionTabbedPane;
-    private JPanel consoleJPanel;
-    private JPanel codeJPanel;
-    private JPanel pipelineJPanel;
-    private JTextArea consoleTextArea;
     private JTextArea codeTextArea;
-    private JTextArea pipelineTextArea;
     private JLabel executionStatusLabel;
     private JButton executeAllButton;
     private JButton button1;
@@ -610,6 +605,15 @@ public class GUI_RISCV extends JFrame
     private JTextArea textArea2;
     private JTextArea textArea3;
     private JTextArea textArea4;
+    private JPanel executeChooserPane;
+    private JTabbedPane dataTabbedPane;
+    private JTabbedPane executionTabbedPane;
+    private JPanel consoleJPanel;
+    private JTextArea consoleTextArea;
+    private JPanel codeJPanel;
+    private JPanel pipelineJPanel;
+    private JTextArea pipelineTextArea;
+    private JRadioButton dataForwardingRadioButton;
     private JButton filetypeChangeButton;
 
 }
