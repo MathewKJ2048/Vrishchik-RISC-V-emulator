@@ -1,3 +1,18 @@
-lh producing all 1s in certain left half of register
+processor:
+lh, lb, lhu, lbu not working (definition needs to be clarified)
+jal and jalr not working
+auipc needs to be checked
+
+compiler:
 li not working properly (test cases: FFFFFFFF, DEADBEEF)
-j not working
+decision needs to be made about use of signature for immediate value given
+different bases in data section not working
+4600 in .word is not working
+
+GUI:
+load being compiled but not executed
+store also not working
+the exceptions produced are not working
+
+decompiler:
+base conversion not working properly
