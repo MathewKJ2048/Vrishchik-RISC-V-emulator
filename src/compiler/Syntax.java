@@ -160,6 +160,7 @@ public class Syntax
     public static final Keyword AUIPC = new Keyword(new String[]{"auipc"});
     public static final Keyword JAL = new Keyword(new String[]{"jal"});
     public static final Keyword JALR = new Keyword(new String[]{"jalr"});
+    public static final Keyword ECALL = new Keyword(new String[]{"ecall","syscall"});
     //public static final Keyword  = new Keyword(new String[]{""});
     //
     static class Command
@@ -262,6 +263,7 @@ public class Syntax
         //$
         l.add(new Command(RET,PSEUDO_TYPE,$));
         l.add(new Command(NOP,PSEUDO_TYPE,$));
+        l.add(new Command(ECALL,PSEUDO_TYPE,$));
         //poly
         l.add(new Command(JAL,J_TYPE,POLY));
         l.add(new Command(JALR,I_TYPE,POLY));

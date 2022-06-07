@@ -6,6 +6,10 @@ the 32 bit binary string representing the command is returned
  */
 public class Binary
 {
+    public static String ecall()
+    {
+        return "00000000000000000000000001110011";
+    }
     private static String U_type(int destination_register_address, long value, String opcode) throws Exception {
         String immediate = to_binary_signed(value,20);
         String destination = to_binary_unsigned(destination_register_address,5);
@@ -390,13 +394,13 @@ public class Binary
         {
             String funct3 = extract_bits(14,12,instruction,31,0);
             String word = "";
-            System.out.println("funct3 is:"+funct3);
+            //System.out.println("funct3 is:"+funct3);
             if(funct3.equals("000"))word = Syntax.SB.words[0];
             else if(funct3.equals("001"))word = Syntax.SH.words[0];
             else if(funct3.equals("010"))word = Syntax.SW.words[0];
             else throw new Exception("Unrecognized funct3 ("+funct3+") for S-type instruction: "+instruction);
 
-            System.out.println("Word is:"+word);
+            //System.out.println("Word is:"+word);
             String RS1 = extract_bits(19,15,instruction,31,0);
             String RS2 = extract_bits(24,20,instruction,31,0);
             String RS1_name = Syntax.name_of_register((int)from_binary_unsigned(RS1));
@@ -427,13 +431,13 @@ public class Binary
             String val = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+RS2_name+","+val);
         }
-        else if(OPCODE.equals("0110111")||OPCODE.equals("0010111"))
+        else if(OPCODE.equals("0110111")||OPCODE.equals("0010111")) // TODO debug this
         {
             //U_TYPE;
             String RD = extract_bits(11,7,instruction,31,0);
             String RD_name = Syntax.name_of_register((int)from_binary_unsigned(RD));
             String immediate = extract_bits(31,12,instruction,31,0);
-            String value = convert(from_binary_signed(immediate)+code_current,true,base,32);
+            String value = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             String word = OPCODE.equals("0110111")?Syntax.LUI.words[0]:Syntax.AUIPC.words[0];
             command.append(word+" "+RD_name+","+value);
         }
@@ -446,7 +450,7 @@ public class Binary
                     extract_bits(19,12,instruction,31,0)+
                     extract_bits(20,20,instruction,31,0)+
                     extract_bits(30,21,instruction,31,0);
-            String value = convert(from_binary_signed(immediate)+code_current,true,base,32);
+            String value = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(Syntax.JAL.words[0]+" "+RD_name+","+value);
         }
         else throw new Exception("unrecognized opcode");

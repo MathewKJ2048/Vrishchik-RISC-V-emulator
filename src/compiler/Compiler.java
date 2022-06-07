@@ -210,8 +210,6 @@ public class Compiler
     public static void compile(List<String> l_raw) throws Exception
     {
         reset();
-        System.out.println(Syntax.J.contains("j"));
-        System.out.println("type is:"+(int)(Syntax.get_input_type_of_command("j")));
         for(int i = 0;i< l_raw.size();i++)
         {
             raw.append(l_raw.get(i)+Syntax.WHITESPACE,i+1);
@@ -849,7 +847,7 @@ public class Compiler
                             String upper = binary.substring(0,20);
                             String lower = binary.substring(21);
                             l_pc.add(new Instruction(Binary.lui(src_add,Binary.from_binary_signed(upper)), code_current,Syntax.LI.words[0]+" "+Syntax.LUI.words[0]));
-                            l_pc.add(new Instruction(Binary.addi(0,src_add,Binary.from_binary_signed(lower)), code_current,Syntax.LI.words[0]+" "+Syntax.ADDI.words[0]));
+                            l_pc.add(new Instruction(Binary.addi(0,src_add,Binary.from_binary_signed(lower)), code_current+4,Syntax.LI.words[0]+" "+Syntax.ADDI.words[0]));
                         }
                         else if(Syntax.INCI.contains(token))
                         {
@@ -931,12 +929,10 @@ public class Compiler
                 {
                     try
                     {
-                        System.out.println("type");
                         long value = process_immediate(sc.next(),sc,transcript);
                         if(sc.is_next_argument())throw new Exception("too many arguments for "+token+" in line "+code_section.numbers.get(sc.start()));
                         if(Syntax.J.contains(token))
                         {
-                            System.out.println("type2");
                             l_pc.add(new Instruction(Binary.jal(0,value-code_current), code_current,Syntax.J.words[0]+" "+Syntax.JAL.words[0]));
                         }
                         else throw new Exception("command type mismatch in line "+code_section.numbers.get(sc.start()));
@@ -959,6 +955,10 @@ public class Compiler
                         else if(Syntax.RET.contains(token))
                         {
                             l_pc.add(new Instruction(Binary.jalr(1,0,0), code_current,Syntax.RET.words[0]+" "+Syntax.JALR.words[0]));
+                        }
+                        else if(Syntax.ECALL.contains(token))
+                        {
+                            l_pc.add(new Instruction(Binary.ecall(),code_current,Syntax.ECALL.words[0]));
                         }
                         else throw new Exception("command type mismatch in line "+code_section.numbers.get(sc.start()));
                         code_current+=4*Syntax.get_n_of_command(token);
@@ -989,7 +989,6 @@ public class Compiler
                                 immediate = process_immediate(arg1,sc,transcript);
                             }
                             l_pc.add(new Instruction(Binary.jal(dest_add,immediate-code_current), code_current,Syntax.JAL.words[0]));
-                            code_current+=4*Syntax.get_n_of_command(token);
                         }
                         catch(Exception e)
                         {
@@ -1024,7 +1023,6 @@ public class Compiler
                             }
                             //addressing is absolute here
                             l_pc.add(new Instruction(Binary.jalr(src_add,dest_add,immediate), code_current,Syntax.JALR.words[0]));
-                            code_current+=4*Syntax.get_n_of_command(token);
                         }
                         catch(Exception e)
                         {
