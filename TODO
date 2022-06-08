@@ -5,13 +5,12 @@ deal with data integration (stack pointer)
 
 compiler:
 sign definition for immediates
+rewrite data section using li instead of addi
 
 GUI:
-font adjustor
+font size adjustor
 button placement for licence accepting
 icon design
-data forwarding checkbox
-switch to code upon load
 
 Documentation:
 features
