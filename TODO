@@ -4,8 +4,8 @@ data forwarding
 deal with data integration (stack pointer)
 
 compiler:
-sign definition for immediates
 rewrite data section using li instead of addi
+optional sign for data section
 
 GUI:
 font size adjustor
@@ -19,8 +19,10 @@ command syntax
 example programs
 guide to source code
 html page with instructions
+commenting source code
 
 ideas:
+successful compilation - would you like to overwrite binary?
 get current path (installer???)
 syscalls:
   exit
