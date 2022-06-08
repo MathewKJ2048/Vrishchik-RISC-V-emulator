@@ -353,6 +353,7 @@ public class GUI_RISCV extends JFrame
                     Decompiler.decompile(execution_binary,10);//TODO look into option to set base
                     decompiled_binary = Decompiler.get_source_lines();
                     set_execution_code();
+                    executionTabbedPane.setSelectedIndex(1); // this is to set decompiled code when user loads code
                     processor.Processor.Read(execution_binary);
                     executionStatusLabel.setText("Running");
                     executeLoadButton.setEnabled(false);
@@ -366,7 +367,7 @@ public class GUI_RISCV extends JFrame
                 }
                 catch (Exception ex)
                 {
-                    JOptionPane.showMessageDialog(executionTab,ex.getStackTrace(),"Error",JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(executionTab,ex.getMessage()+"\n"+ex.getStackTrace(),"Error",JOptionPane.ERROR_MESSAGE);
                 }
             }
         });

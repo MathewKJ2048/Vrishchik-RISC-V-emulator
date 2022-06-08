@@ -23,7 +23,21 @@ public class Main
         UIManager.setLookAndFeel(GUI_RISCV.get_look_and_feel_location(GUI_RISCV.get_look_and_feel()));
         JFrame r = new GUI_RISCV("Vrishchik");
     }
+    public static void limit_check()
+    {
+        Scanner sc = new Scanner(System.in);
+        while(true)
+        {
+            System.out.println("Enter number of bits");
+            int n = sc.nextInt();
+            if(n<=1)break;
+            System.out.println("Enter number:");
+            long m = sc.nextLong();
+            System.out.println("signed:"+compiler.Binary.belongs_in_range(m,n,true));
+            System.out.println("unsigned:"+compiler.Binary.belongs_in_range(m,n,false));
 
+        }
+    }
     public static void check() // TODO rewrite
     {
         try
