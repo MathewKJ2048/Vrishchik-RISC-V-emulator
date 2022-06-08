@@ -10,8 +10,17 @@ public class Binary
     {
         return "00000000000000000000000001110011";
     }
-    private static String U_type(int destination_register_address, long value, String opcode) throws Exception {
-        String immediate = to_binary_signed(value,20);
+    private static String U_type(int destination_register_address, long value, String opcode) throws Exception
+    {
+        String immediate = ""; // this allows for the use of unsigned values as well
+        try
+        {
+            immediate = to_binary_signed(value,20);
+        }
+        catch (Exception e)
+        {
+            immediate = to_binary_unsigned(value,20);
+        }
         String destination = to_binary_unsigned(destination_register_address,5);
         return immediate+destination+opcode;
     }
@@ -201,9 +210,7 @@ public class Binary
     }
     public static String to_binary_signed(long n, int length) throws Exception
     {
-        long lower_limit = -(1L<<(length-1)); //-(2^(l-1))
-        long upper_limit = -lower_limit-1;    //2^(l-1)-1
-        if(!(lower_limit <= n && n<=upper_limit))throw new Exception ("Number out of range (signed)");
+        if(!belongs_in_range(n,length,true))throw new Exception ("Number out of range (signed)");
         long p = 1L<<length;  // 2^l
         long N = (p + n)%p;
         String bin = Long.toBinaryString(N);
@@ -212,11 +219,8 @@ public class Binary
     }
     public static String to_binary_unsigned(long n,int length) throws Exception
     {
-        long lower_limit = 0;
-        long upper_limit = (1L<<length) - 1; //2^l-1
-        if(!(lower_limit <= n && n<=upper_limit))throw new Exception ("Number out of range (unsigned)");
+        if(!belongs_in_range(n,length,false))throw new Exception ("Number out of range (unsigned)");
         String bin = Long.toBinaryString(n);
-        if(length<bin.length())throw new Exception("number too large (unsigned) ");
         return "0".repeat(Math.max(0, length - bin.length()))+bin;
     }
     public static String to_binary(long value, int length, boolean signed)
@@ -368,10 +372,10 @@ public class Binary
             else if(OPCODE.equals("0000011"))
             {
                 if(funct3.equals("000"))word=Syntax.LB.words[0];
-                else if(funct3.equals("010"))word=Syntax.LH.words[0];
-                else if(funct3.equals("100"))word=Syntax.LW.words[0];
-                else if(funct3.equals("101"))word=Syntax.LBU.words[0];
-                else if(funct3.equals("110"))word=Syntax.LHU.words[0];
+                else if(funct3.equals("001"))word=Syntax.LH.words[0];
+                else if(funct3.equals("010"))word=Syntax.LW.words[0];
+                else if(funct3.equals("100"))word=Syntax.LBU.words[0];
+                else if(funct3.equals("101"))word=Syntax.LHU.words[0];
                 else throw new Exception("Unrecognized funct3 ("+funct3+") for I-type instruction: "+instruction);
             }
             else
@@ -455,5 +459,21 @@ public class Binary
         }
         else throw new Exception("unrecognized opcode");
         return command.toString();
+    }
+    public static boolean belongs_in_range(long value, int number_of_bits, boolean signed)
+    {
+        /*
+        checks if value can be represented in an n bit system, where
+        n = number of bits
+        using two's complement representation
+        ranges:
+        unsigned: 0 to 2^n - 1              both inclusive
+        signed: -(2^(n-1)) to 2^(n-1) - 1   both inclusive
+        1<<n = 2^n
+         */
+        long min = signed?-(1L<<(number_of_bits-1)):0;
+        long max = (1L<<(number_of_bits-(signed?1:0))) - 1;
+        if(value>max || value<min)return false;
+        else return true;
     }
 }

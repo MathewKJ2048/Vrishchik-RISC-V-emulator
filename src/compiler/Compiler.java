@@ -346,9 +346,9 @@ public class Compiler
                     {
                         if(data_current%4!=0)throw new Exception("misaligned memory in line"+data_section.get_number(sc.start()));
                         transcript.append("\n").append(Syntax.WORD.words[0]).append(" allocated");
-                        if(sc.hasNextLong())
+                        if(sc.has_next_immediate())
                         {
-                            long initial_value = sc.nextLong();
+                            long initial_value = Parser.parseLong(sc.next());
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             //$t0 or R5 is used as a temporary register to transfer values into the memory
@@ -364,9 +364,9 @@ public class Compiler
                     {
                         //memory is always aligned for BYTE since it is byte addressable memory
                         transcript.append("\n").append(Syntax.BYTE.words[0]).append(" allocated");
-                        if(sc.hasNextLong())
+                        if(sc.has_next_immediate())
                         {
-                            long initial_value = sc.nextLong();
+                            long initial_value = Parser.parseLong(sc.next());
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.BYTE.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sb(0, 5, data_current), code_current, Syntax.BYTE.words[0] + " " + Syntax.SB.words[0]));
@@ -381,9 +381,9 @@ public class Compiler
                     {
                         if(data_current%2!=0)throw new Exception("misaligned memory in line "+data_section.get_number(sc.start()));
                         transcript.append("\n").append(Syntax.SHORT.words[0]).append(" allocated");
-                        if(sc.hasNextLong())
+                        if(sc.has_next_immediate())
                         {
-                            long initial_value = sc.nextLong();
+                            long initial_value = Parser.parseLong(sc.next());
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.SHORT.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sh(0, 5, data_current), code_current, Syntax.SHORT.words[0] + " " + Syntax.SH.words[0]));
@@ -398,7 +398,7 @@ public class Compiler
                     {
                         try
                         {
-                            int n = (int)sc.nextLong();
+                            int n = (int)Parser.parseLong(sc.next());
                             data_current+=n;
                             transcript.append("\n").append(n).append(" bytes of space in memory allocated");
                         }
@@ -411,7 +411,7 @@ public class Compiler
                     {
                         try
                         {
-                            int n = (int)sc.nextLong();
+                            int n = (int)Parser.parseLong(sc.next());
                             int p = (int)Math.pow(2,n);
                             while(data_current%p!=0)data_current++;
                             transcript.append("\n" + "data pointer aligned to nearest multiple of 2^").append(n);
@@ -786,7 +786,7 @@ public class Compiler
                         {
                             l_pc.add(new Instruction(Binary.add(src_add, 0, dest_add), code_current,Syntax.MV.words[0]+" "+Syntax.ADD.words[0]));
                         }
-                        else if(Syntax.NOT.contains(token))
+                        else if(Syntax.NOT.contains(token))// TODO won't invert every bit, only the bits in invert? maybe it will work, check the part
                         {
                             l_pc.add(new Instruction(Binary.xori(src_add, dest_add, -1), code_current,Syntax.NOT.words[0]+" "+Syntax.XORI.words[0]));
                         }
@@ -842,12 +842,24 @@ public class Compiler
                         if(Syntax.LI.contains(token))
                         {
                             System.out.println("LI identified");
-                            String binary = Binary.to_binary_unsigned(value,32);
-                            System.out.println("binary is:"+binary);
-                            String upper = binary.substring(0,20);
+                            String binary = "";
+                            if(!Binary.belongs_in_range(value,32,true))
+                            {
+                                binary = Binary.to_binary_unsigned(value,32);
+                                transcript.append("\nWARNING: number is too large for signed notation, thus it is assumed to be unsigned");
+                            }
+                            else
+                            {
+                                binary = Binary.to_binary_signed(value,32);
+                            }
                             String lower = binary.substring(21);
+                            String upper = binary.substring(0,20);;
+                            long upper_value = Binary.from_binary_unsigned(upper);
+                            if(lower.charAt(0)=='1')upper_value++;
+                            upper_value%=(1L<<20);
+                            upper = Binary.to_binary_unsigned(upper_value,20);
                             l_pc.add(new Instruction(Binary.lui(src_add,Binary.from_binary_signed(upper)), code_current,Syntax.LI.words[0]+" "+Syntax.LUI.words[0]));
-                            l_pc.add(new Instruction(Binary.addi(0,src_add,Binary.from_binary_signed(lower)), code_current+4,Syntax.LI.words[0]+" "+Syntax.ADDI.words[0]));
+                            l_pc.add(new Instruction(Binary.addi(src_add,src_add,Binary.from_binary_signed(lower)), code_current+4,Syntax.LI.words[0]+" "+Syntax.ADDI.words[0]));
                         }
                         else if(Syntax.INCI.contains(token))
                         {
@@ -883,10 +895,12 @@ public class Compiler
                         }
                         else if(Syntax.LUI.contains(token))
                         {
+                            if(!Binary.belongs_in_range(value,20,true))transcript.append("\nWARNING: number is too large for signed notation, thus it is assumed to be unsigned");
                             l_pc.add(new Instruction(Binary.lui(src_add,value), code_current,Syntax.LUI.words[0]));
                         }
                         else if(Syntax.AUIPC.contains(token))
                         {
+                            if(!Binary.belongs_in_range(value,20,true))transcript.append("\nWARNING: number is too large for signed notation, thus it is assumed to be unsigned");
                             l_pc.add(new Instruction(Binary.auipc(src_add,value), code_current,Syntax.AUIPC.words[0]));
                         }
                         else throw new Exception("command type mismatch in line "+code_section.numbers.get(sc.start()));

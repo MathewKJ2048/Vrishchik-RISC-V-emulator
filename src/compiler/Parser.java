@@ -82,6 +82,21 @@ public class Parser // similar to Scanner class
         }
         else return false;
     }
+    public boolean has_next_immediate()
+    {
+        try
+        {
+            Matcher r = p.matcher(this.contents);
+            if(!r.find(this.e==-1?0:this.e))return false;
+            String temp = contents.substring(r.start(),r.end()); // next d+t pair
+            Matcher s = Pattern.compile(Syntax.DELIMITER_REGEX).matcher(temp);
+            if(!s.find())return false;
+            String value = temp.substring(s.end());
+            long x = Parser.parseLong(value);
+            return true;
+        }
+        catch(Exception e){return false;}
+    }
     public static long parseLong(String s) throws NumberFormatException
     {
         //capital letters represent digits after 9
