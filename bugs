@@ -4,7 +4,7 @@ jal and jalr not working
 auipc needs to be checked
 
 compiler:
-li not working properly (test cases: FFFFFFFF, DEADBEEF)
+display of extremely negative numbers failing
 
 GUI:
 load being compiled but not executed
