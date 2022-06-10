@@ -4,8 +4,6 @@ data forwarding
 deal with data integration (stack pointer)
 
 compiler:
-rewrite data section using li instead of addi
-optional sign for data section
 
 GUI:
 font size adjustor
