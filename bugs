@@ -4,12 +4,7 @@ jal and jalr not working
 auipc needs to be checked
 
 compiler:
-display of extremely negative numbers failing
 
 GUI:
-load being compiled but not executed
-store also not working
-the exceptions produced are not working
 
 decompiler:
-base conversion not working properly
