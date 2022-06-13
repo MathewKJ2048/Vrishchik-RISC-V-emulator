@@ -12,12 +12,16 @@ icon design
 
 Documentation:
 features
-general syntax
-command syntax
 example programs
-guide to source code
-html page with instructions
 commenting source code
+how to install/run
+how to use
+syntax commands
+syntax general
+syscall codes
+registers
+guide to code
+
 
 ideas:
 successful compilation - would you like to overwrite binary?
