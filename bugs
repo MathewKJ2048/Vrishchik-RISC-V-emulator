@@ -1,10 +1,10 @@
 processor:
-lh, lb, lhu, lbu not working (definition needs to be clarified)
-jal and jalr not working
+jalr not working
 auipc needs to be checked
 
 compiler:
 
 GUI:
+display memory
 
 decompiler:
