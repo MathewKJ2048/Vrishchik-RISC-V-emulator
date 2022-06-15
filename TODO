@@ -4,8 +4,6 @@ data forwarding
 deal with data integration (stack pointer)
 
 compiler:
-look into lui for jalr
-read specs on multiplication for addresses
 
 GUI:
 font size adjustor
