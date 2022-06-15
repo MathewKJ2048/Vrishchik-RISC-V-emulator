@@ -1,5 +1,4 @@
 processor:
-jalr not working
 auipc needs to be checked
 
 compiler:
