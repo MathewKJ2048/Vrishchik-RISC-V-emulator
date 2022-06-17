@@ -4,11 +4,12 @@ data forwarding
 deal with data integration (stack pointer)
 
 compiler:
+write AUIPC
+write pseudo-instruction la
 
 GUI:
-font size adjustor
+make font change at runtime
 button placement for licence accepting
-icon design
 
 Documentation:
 features
@@ -31,5 +32,5 @@ syscalls:
   read/write   byte half word   format
 		string        length vs null termination
 status: running vs waiting (allows for implementation of waiting for user input)
-fix console as monospace??
 generate report, not emulate
+font size adjustor for general font??
