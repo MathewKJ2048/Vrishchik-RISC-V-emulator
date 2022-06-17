@@ -4,8 +4,6 @@ data forwarding
 deal with data integration (stack pointer)
 
 compiler:
-write AUIPC
-write pseudo-instruction la
 
 GUI:
 make font change at runtime
