@@ -1,8 +1,11 @@
+
+
 import compiler.Binary;
 import compiler.Compiler;
 import compiler.Decompiler;
 
 import javax.swing.*;
+import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -13,15 +16,27 @@ import java.util.Scanner;
 public class Main
 {
     public static void main(String[] args) throws Exception {
-
         GUI_check();
+    }
+    public static void convert_check()
+    {
+        Scanner sc = new Scanner(System.in);
+        while(true)
+        {
+            int n = sc.nextInt();
+            if(n<0)break;
+            long value = -(1L<<n);
+            System.out.println("value:"+value+":"+Binary.belongs_in_range(value,32,true));
+            System.out.println(Binary.convert(value,true,2,32));
+        }
     }
     public static void GUI_check() throws Exception
     {
 
         GUI_RISCV.load_preferences();
         UIManager.setLookAndFeel(GUI_RISCV.get_look_and_feel_location(GUI_RISCV.get_look_and_feel()));
-        JFrame r = new GUI_RISCV("Vrishchik");
+        UIManager.put("TextArea.font",GUI_RISCV.get_console_font());
+        JFrame r = new GUI_RISCV();
     }
     public static void limit_check()
     {
@@ -38,18 +53,19 @@ public class Main
 
         }
     }
+    /*
     public static void check() // TODO rewrite
     {
         try
         {
             List<String> lines = Files.readAllLines(Paths.get("test.s"));
-            compiler.Compiler.compile(lines);
+            src.compiler.Compiler.compile(lines);
         }
         catch (Exception e)
         {
-            System.out.println(compiler.Compiler.get_transcript().get_compilation());
+            System.out.println(src.compiler.Compiler.get_transcript().get_compilation());
             System.out.println("--------------------------------------------------------");
-            System.out.println(compiler.Compiler.get_transcript().get_labels());
+            System.out.println(src.compiler.Compiler.get_transcript().get_labels());
             System.out.println("---------------------------------------------------------");
             System.out.println(e.getMessage());
             System.out.println("Error in compilation");
@@ -68,7 +84,7 @@ public class Main
             return;
         }
         String separator = "----------------";
-        System.out.println(separator+"code:\n"+ Compiler.get_transcript().get_code());
+        System.out.println(separator+"code:\n"+ src.compiler.Compiler.get_transcript().get_code());
         System.out.println(separator+"Scrubbed code:\n"+ Compiler.get_transcript().get_scrubbed_code());
         System.out.println(separator+"labels:\n"+ Compiler.get_transcript().get_labels());
         System.out.println(separator+"binary:\n"+ Compiler.get_transcript().get_binary());
@@ -77,7 +93,7 @@ public class Main
         System.out.println(Decompiler.get_source());
         try
         {
-            //compiler.Compiler.compile(Paths.get("test2.s"), Paths.get("test2.bin"),true);
+            //src.compiler.Compiler.compile(Paths.get("test2.s"), Paths.get("test2.bin"),true);
         }
         catch(Exception e)
         {
@@ -124,6 +140,7 @@ public class Main
             e.printStackTrace();
         }
     }
+    */
     /*
     public static void bin_check() throws Exception
     {
@@ -154,7 +171,7 @@ public class Main
     }
     public static void full_check()
     {
-        compiler.Compiler c = new compiler.Compiler(0,0);
+        src.compiler.Compiler c = new src.compiler.Compiler(0,0);
         String error = "";
         try
         {
@@ -176,6 +193,7 @@ public class Main
             System.out.println("Register x"+i+": "+processor.Processor.get_register(i));
         }
     }*/
+    /*
     public static void parse_check()
     {
         compiler.Parser p = new compiler.Parser(" \" a, , bc \" , , \"efg\" ");
@@ -191,6 +209,7 @@ public class Main
             }
         }
     }
+    */
     public static void BIN_check()
     {
         Scanner sc = new Scanner(System.in);

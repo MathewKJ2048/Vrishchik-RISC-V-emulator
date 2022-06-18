@@ -1,9 +1,16 @@
+
+
+import compiler.Binary;
 import compiler.Decompiler;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -15,19 +22,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/*
-TODO look into improper rendering of nimbus, metal and others
-TODO check to ensure overwriting does not occur for file
-TODO look into the exact function of "load"
- */
-
 public class GUI_RISCV extends JFrame
 {
     public static final String LAF_JSON_KEY = "Look and Feel";
     public static final String DEFAULT_DIRECTORY_PATH_JSON_KEY = "Default Directory Path";
     public static final String FILE_TYPE_JSON_KEY = "File Type";
-    public static final HashMap<String,String> LOOK_AND_FEEL = get_all_lookas_and_feels();
-    private static HashMap<String,String> get_all_lookas_and_feels()
+    public static final String FONT_SIZE_JSON_KEY = "Console Font Size";
+    public static final HashMap<String,String> LOOK_AND_FEEL = get_all_looks_and_feels();
+    public static final HashMap<String,Integer> FONT_SIZES = get_font_sizes();
+    public static final String[] Console_elements = new String[]{"TextArea"};
+    public static final String[] UI_elements = new String[]{"Label","RadioButton","Button",""};
+    private static HashMap<String,Integer> get_font_sizes()
+    {
+        HashMap<String,Integer> fs = new HashMap<String,Integer>();
+        fs.put("Small",12);
+        fs.put("Medium",16);
+        fs.put("Large",20);
+        fs.put("Huge",24);
+        return fs;
+    }
+    private static HashMap<String,String> get_all_looks_and_feels()
     {
         HashMap<String,String> laf = new HashMap<String, String>();
         laf.put("Acryl","com.jtattoo.plaf.acryl.AcrylLookAndFeel");
@@ -61,6 +75,9 @@ public class GUI_RISCV extends JFrame
         try
         {
             UIManager.setLookAndFeel(get_look_and_feel_location(look_and_feel));
+            System.out.println(ConsoleFont.getSize());
+            //TODO solve this issue
+            //UIManager.put("TextArea.font", GUI_RISCV.ConsoleFont);
         }
         catch (Exception ex)
         {
@@ -74,6 +91,8 @@ public class GUI_RISCV extends JFrame
         filetypeTextField.setText(file_type);
         this.directoryTextField.setText(default_directory.getAbsolutePath());
         this.LFComboBox.setSelectedItem(look_and_feel);
+        //TODO write
+        //this.consoleFontComboBox.setSelectedItem(FONT_SIZES.);
         setRegisters();
         this.memorySizeComboBox.setSelectedItem("word");
         setMemory();
@@ -92,13 +111,14 @@ public class GUI_RISCV extends JFrame
         JSONParser jp = new JSONParser();
         try
         {
-            JSONObject obj = (JSONObject) jp.parse(new FileReader("config.json"));
+            JSONObject obj = (JSONObject) jp.parse(new FileReader("program files/config.json"));
             try
             {
                 file_type = (String)obj.get(FILE_TYPE_JSON_KEY); // this does not require verification
-                String laf = (String)obj.get(LAF_JSON_KEY);
                 Path default_directory_path = Paths.get((String)obj.get(DEFAULT_DIRECTORY_PATH_JSON_KEY));
                 if(!(Files.isDirectory(default_directory_path) && Files.isWritable(default_directory_path)))throw new Exception("Invalid path for default directory");
+                default_directory = default_directory_path.toFile();
+                String laf = (String)obj.get(LAF_JSON_KEY);
                 if(LOOK_AND_FEEL.containsKey(laf))look_and_feel=laf;
                 else
                 {
@@ -106,10 +126,12 @@ public class GUI_RISCV extends JFrame
                     throw new Exception("look and feel not rcognized, using default look and feel");
 
                 }
-                default_directory = default_directory_path.toFile();
+                int FontSize = (int)((long)obj.get(FONT_SIZE_JSON_KEY));
+                ConsoleFont = ConsoleFont.deriveFont((float)(FontSize));
             }
             catch(Exception e)
             {
+                e.printStackTrace();
                 JOptionPane.showMessageDialog(new JFrame(),e.getMessage()+"\nconfig.json has been corrupted, default settings will be used","Warning",JOptionPane.WARNING_MESSAGE);
             }
         }
@@ -138,9 +160,10 @@ public class GUI_RISCV extends JFrame
         obj.put(DEFAULT_DIRECTORY_PATH_JSON_KEY,default_directory.getAbsolutePath());
         obj.put(FILE_TYPE_JSON_KEY,file_type);
         obj.put(LAF_JSON_KEY,look_and_feel);
+        obj.put(FONT_SIZE_JSON_KEY,ConsoleFont.getSize());
         try
         {
-            Files.writeString(Paths.get("config.json"), obj.toString());
+            Files.writeString(Paths.get("program files/config.json"), obj.toString());
         }
         catch(Exception ex){
             ex.printStackTrace();}//no error message here, it will be jarring to see one after closing
@@ -164,23 +187,24 @@ public class GUI_RISCV extends JFrame
                 if(base==-1)this.registersTextArea.setText("Unrecognized base");
                 s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base,32); //register size is always 32 bits
             }
-            b.append("Register "+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
+            b.append("R"+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
         }
         this.registersTextArea.setText(b.toString());
     }
     List<String> memory;
-    private void setMemory()
-    {
+    private void setMemory() {
         memory = new ArrayList<>();
         int size = get_size(memorySizeComboBox.getSelectedItem().toString());
         for(int i=0;i<processor.Processor.get_memory_size()/size;i++)
         {
-            int value=0;
+            long value=0;
+            StringBuilder bytes = new StringBuilder();
             for(int j=0;j<size;j++)
             {
-                value=value<<4;
-                value+=processor.Processor.memory(size*i+j);
+                byte b=processor.Processor.memory(size*i+j);
+                try{bytes.append(Binary.to_binary_signed(b,8));}catch (Exception e){}
             }
+            value = Binary.from_binary_signed(bytes.toString());
             String option = (String) this.memoryFormatComboBox.getSelectedItem();
             String s;
             if(option.equals("ASCII"))
@@ -223,9 +247,11 @@ public class GUI_RISCV extends JFrame
         else if(s.equals("word"))return 4;
         return 0;
     }
-    public GUI_RISCV(String title)
+    public GUI_RISCV()
     {
-        super(title);
+        super("Vrishchik");
+        ImageIcon icon = new ImageIcon("program files/icon.png");
+        this.setIconImage(icon.getImage());
         initialize();
         main.addWindowListener(new WindowAdapter() {
             @Override
@@ -361,7 +387,8 @@ public class GUI_RISCV extends JFrame
                     control.is_active = true;
                     executeStepButton.setEnabled(true);
                     executeAllButton.setEnabled(true);
-                    System.out.println("before creation of new thread:"+processor.Processor.PC());
+                    enterButton.setEnabled(true);
+                    inputTextArea.setEditable(true);
                     ExecutionThread et = new ExecutionThread();
                     et.start();
                 }
@@ -480,8 +507,12 @@ public class GUI_RISCV extends JFrame
             decompiled_binary = null;
             codeTextArea.setText("");
             executeFilenameTextField.setText("");
+            consoleTextArea.setText("");
             executeStepButton.setEnabled(false);
             executeAllButton.setEnabled(false);
+            enterButton.setEnabled(false);
+            inputTextArea.setText("");
+            inputTextArea.setEditable(false);
             executeLoadButton.setEnabled(true);
             dataForwardingRadioButton.setEnabled(true);
             processor.Processor.reset_instruction();
@@ -527,11 +558,31 @@ public class GUI_RISCV extends JFrame
         //
         threadButton.addActionListener(e -> textArea1.setText("number of active threads:"+Thread.activeCount()));
         PCButton.addActionListener(e -> textArea2.setText("PC:"+processor.Processor.PC()));
+        enterButton.addActionListener(e -> {
+            String input = inputTextArea.getText();
+            inputTextArea.setText("");
+
+        });
+        consoleFontComboBox.addActionListener(e -> {
+            int size = FONT_SIZES.get(consoleFontComboBox.getSelectedItem());
+            ConsoleFont = ConsoleFont.deriveFont((float) (size));
+            set_look_and_feel();
+        });
     }
     private JFrame main = this;
     private static String file_type = "s";
     private static File default_directory = new JFileChooser().getCurrentDirectory();
     private static String look_and_feel = "Nimbus";
+    private static Font UIFont = new Font("Consolas",Font.PLAIN,12);
+    private static Font ConsoleFont = new Font("Consolas",Font.PLAIN,16);
+    public static Font get_UI_font()
+    {
+        return UIFont;
+    }
+    public static Font get_console_font()
+    {
+        return ConsoleFont;
+    }
     public static String get_look_and_feel()
     {
         return look_and_feel;
@@ -598,7 +649,7 @@ public class GUI_RISCV extends JFrame
     private JTextArea codeTextArea;
     private JLabel executionStatusLabel;
     private JButton executeAllButton;
-    private JButton button1;
+    private JButton enterButton;
     private JButton threadButton;
     private JTabbedPane tabbedPane4;
     private JButton PCButton;
@@ -610,11 +661,19 @@ public class GUI_RISCV extends JFrame
     private JTabbedPane dataTabbedPane;
     private JTabbedPane executionTabbedPane;
     private JPanel consoleJPanel;
-    private JTextArea consoleTextArea;
     private JPanel codeJPanel;
     private JPanel pipelineJPanel;
     private JTextArea pipelineTextArea;
     private JRadioButton dataForwardingRadioButton;
+    private JTextArea inputTextArea;
+    private JTextArea consoleTextArea;
+    private JComboBox UIFontComboBox;
+    private JComboBox consoleFontComboBox;
+    private JTabbedPane tabbedPane2;
+    private JButton ipsumButton;
+    private JRadioButton dolorRadioButton;
+    private JComboBox comboBox1;
+    private JTextArea LIDSATextArea;
     private JButton filetypeChangeButton;
 
 }
