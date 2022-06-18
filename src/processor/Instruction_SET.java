@@ -9,7 +9,9 @@ class Instruction_SET{
             case "B" -> Set_B(s);
             case "U" -> Set_U(s);
             case "P" -> Set_P(s);
-            default -> Set_J(s);
+            case "AUIPC" -> Set_AUIPC(s);
+            case "JAL" -> Set_JAL(s);
+            default -> Set_JALR(s);
         };
     }
     public int Set_P(String s){
@@ -98,14 +100,14 @@ class Instruction_SET{
         return 33;
 
     }
-    public int Set_J(String s){
-        String sub=s.substring(17,20);
-        if(sub.equals("000")){
-            return 34;
-        }
-        else{
+    public int Set_JAL(String s){
             return 35;
-        }
+    }
+    public int Set_JALR(String s){
+        return 34;
+    }
+    public int Set_AUIPC(String s){
+        return 40;
     }
 }
 

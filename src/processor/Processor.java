@@ -9,31 +9,6 @@ public class Processor{
     static Extract_Reg R=new Extract_Reg();
     static Operations O = new Operations();
     static int j,i;
-    /*
-    public static void main(String[] args) throws FileNotFoundException {
-        j=0;
-        i=Read("Test.txt");
-        Arrays.fill(D.Mem,(byte)0);
-        Programs.BubbleSort();
-        System.out.println("Before Bubble sort");
-        for(int k=0;k<32;k++){
-            System.out.println("R"+k+"="+D.R[k]);
-        }
-        for(int k=0;k<400;k=k+4){
-            int z=(D.Mem[k]&0xFF)<<24|(D.Mem[k+1]&0xFF)<<16|(D.Mem[k+2]&0xFF)<<8|(D.Mem[k+3]&0xFF);
-            System.out.println("Memory["+k+":"+(k+3)+"] = "+z);
-        }
-        System.out.println("-------------------------------------------------------------\nAfter Bubble sort");
-        execute_all();
-        for(int k=0;k<32;k++){
-            System.out.println("R"+k+"="+D.R[k]);
-        }
-        for(int k=0;k<400;k=k+4){
-            int z=(D.Mem[k]&0xFF)<<24|(D.Mem[k+1]&0xFF)<<16|(D.Mem[k+2]&0xFF)<<8|(D.Mem[k+3]&0xFF);
-            System.out.println("Memory["+k+":"+(k+3)+"] = "+z);
-        }
-
-    }*/
     public static void execute_all(){
         for(j=0;j<(i/4);j=D.PC/4)
         {

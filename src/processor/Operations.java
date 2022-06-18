@@ -96,12 +96,21 @@ class Operations{
                 D.PC = D.PC + 4;
 
             }
-        } else if (op == 34) {
-            D.R[IDRF_BUFF.arr[1]] = D.PC + 4;
-            D.PC = D.PC + UTIL.SignToDecimal(S.charAt(0) + S.substring(12, 20) + S.charAt(11) + S.substring(1, 11));
-        } else if (op == 35) {
-            D.PC = D.PC + UTIL.SignToDecimal(S.charAt(0) + S.substring(10, 21) + S.charAt(9) + S.substring(1, 9) + "000000000000");
-        } else {
+        } else if (op == 34) {//JALR
+            if(IDRF_BUFF.arr[1]!=0)D.R[IDRF_BUFF.arr[1]] = D.PC + 4;
+            System.out.println("value:"+UTIL.SignToDecimal(S.substring(0, 12)));
+            System.out.println("PC:"+D.PC);
+            System.out.println("increment:"+D.R[IDRF_BUFF.arr[3]]+"+"+ UTIL.SignToDecimal(S.substring(0, 12)));
+            D.PC = D.R[IDRF_BUFF.arr[3]] + UTIL.SignToDecimal(S.substring(0, 12));
+        } else if (op == 35) {//JAL
+            if(IDRF_BUFF.arr[1]!=0)D.R[IDRF_BUFF.arr[1]] = D.PC + 4;
+            String binary = S.charAt(0) + S.substring(12, 20) + S.charAt(11) + S.substring(1, 11);
+            D.PC = D.PC + UTIL.SignToDecimal(binary)*2;
+        }else if(op==40){ //AUIPC
+            if(IDRF_BUFF.arr[1]!=0)D.R[IDRF_BUFF.arr[1]] = D.PC + UTIL.SignToDecimal(S.substring(0, 20)) << (12);
+            D.PC+=4;
+        }
+        else {
             D.PC = D.PC + 4;
         }
     }
@@ -250,9 +259,8 @@ class Operations{
         } else if (op == 26) {
             EXE_BUFF.exe1 = offset2 + rs1;
 
-        } else if (op == 33) { // TODO look into this, this is LUI
+        } else if (op == 33) { // lui
             EXE_BUFF.exe1 = UTIL.SignToDecimal(S.substring(0, 20)) << (12);
-            // D.R[IDRF_BUFF[1]]=UTIL.SignToDecimal(S.substring(0,20));
 
         }
     }
@@ -325,10 +333,21 @@ class Operations{
             MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24 | (D.Mem[EXE_BUFF.exe1 + 1] & 0xFF) << 16 | (D.Mem[EXE_BUFF.exe1 + 2] & 0xFF) << 8 | D.Mem[EXE_BUFF.exe1 + 3] & 0xFF;
 
         } else if (op == 22) {
-            MEM_BUFF.mem1 = D.Mem[EXE_BUFF.exe1];
+            if (D.Mem[EXE_BUFF.exe1] > 0) {
+                MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24;
+                //D.R[IDRF_BUFF[1]] = D.Mem[EXE_BUFF];
+            } else {
+                MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24;
+                MEM_BUFF.mem1 = -MEM_BUFF.mem1;
+            }
 
         } else if (op == 23) {
-            MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 8 | D.Mem[EXE_BUFF.exe1 + 1];
+            if (D.Mem[EXE_BUFF.exe1] > 0) {
+                MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24 | (D.Mem[EXE_BUFF.exe1 + 1] & 0xFF)<<16;
+            } else {
+                MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24 | (D.Mem[EXE_BUFF.exe1 + 1] & 0xFF)<<16;
+                MEM_BUFF.mem1 = -MEM_BUFF.mem1;
+            }
 
         } else if (op == 24) {
             D.Mem[EXE_BUFF.exe1] = (byte) rs2;

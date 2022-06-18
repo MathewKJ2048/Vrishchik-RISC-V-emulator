@@ -39,5 +39,6 @@ class Extract_Reg{
     }
     public void Reg_J(int[] Reg,String s){
         Reg[0] = UTIL.toDecimal(s.substring(20,25));
+        Reg[2] = UTIL.toDecimal(s.substring(12,17));
     }
 }

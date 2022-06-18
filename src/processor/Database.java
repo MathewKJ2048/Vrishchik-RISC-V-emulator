@@ -13,7 +13,9 @@ class Database{
             case "1100011" -> "B";
             case "0110111" -> "U";
             case "1111111" -> "P";
-            default -> "J";
+            case "1101111" -> "JAL";
+            case "0010111" -> "AUIPC";
+            default -> "JALR";
         };
     }
 }
