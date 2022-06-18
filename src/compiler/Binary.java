@@ -135,10 +135,11 @@ public class Binary
     }
     
     private static String B_type(int source_register_address_1,int source_register_address_2, long value, String funct3) throws Exception {
+        if(value%2!=0)throw new Exception("memory address misaligned");
         String opcode = "1100011";
         String source_1 = to_binary_unsigned(source_register_address_1,5);
         String source_2 = to_binary_unsigned(source_register_address_2,5);
-        String immediate = to_binary_signed(value,12);
+        String immediate = to_binary_signed(value/2,12);
         return extract_bits(12,12,immediate,12,1)+extract_bits(10,5,immediate,12,1)
                     +source_2+source_1+funct3+extract_bits(4,1,immediate,12,1)+extract_bits(11,11,immediate,12,1)+opcode;
     }
@@ -180,12 +181,18 @@ public class Binary
     //sh 001 sb 000
 
     
-    public static String jal(int destination_register_address, long offset) throws Exception {
+    public static String jal(int destination_register_address, long offset) throws Exception
+    {
+        if(offset%2!=0)throw new Exception("misaligned memory");
         String opcode = "1101111";
         String destination = to_binary_unsigned(destination_register_address,5);
-        String immediate = to_binary_signed(offset,20);
-        return extract_bits(20,20,immediate,20,1)+extract_bits(10,1,immediate,20,1)+extract_bits(11,11,immediate,20,1)+extract_bits(19,12,immediate,20,1)
-                    +destination+opcode;
+        String immediate = to_binary_signed(offset/2,20);
+        System.out.println("immediate:"+immediate);
+        return extract_bits(20,20,immediate,20,1)+
+                extract_bits(10,1,immediate,20,1)+
+                extract_bits(11,11,immediate,20,1)+
+                extract_bits(19,12,immediate,20,1)+
+                destination+opcode;
     }
     
     public static long from_binary_unsigned(String binary)
@@ -231,6 +238,8 @@ public class Binary
         }
         catch (Exception e)
         {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
             return "-".repeat(length);
         }
     }
@@ -254,7 +263,7 @@ public class Binary
         StringBuilder answer = new StringBuilder();
         for(int i=0;i<binary.length()/3;i++)
         {
-            String triad = binary.substring(3*i,3*i+3);
+            String triad = binary.substring(3*i,3*i+3);//binary number grouped into units of 3 bits
             answer.append(""+to_decimal(triad));
         }
         return answer.toString();
@@ -268,7 +277,7 @@ public class Binary
         StringBuilder answer = new StringBuilder();
         for(int i=0;i<binary.length()/4;i++)
         {
-            String tetrad = binary.substring(4*i,4*i+4);
+            String tetrad = binary.substring(4*i,4*i+4);//binary number grouped into units of 4 bits
             String dec = to_decimal(tetrad);
             if(dec.length()>=2)answer.append(""+(char)(dec.charAt(1)-'0'+'A'));
             else answer.append(dec);
@@ -277,13 +286,17 @@ public class Binary
     }
     public static String convert(long value,boolean signed,int base,int length)
     {
+        //produces a "length" long string where "value" is written in "base"
         String answer = "";
         String bin;
-
-
+        /*
+        if signed==true, we use the conventional notation whereby negative numbers are shown with a minus sign in front of them
+        thus we find the magnitude, represent it in the correct base and append the sign
+        if signed==false, we use the complement system to represent the number
+         */
         if(signed&&value<0){value=-value;answer+="-";}
 
-        bin = to_binary(value,length,true);
+        bin = to_binary(value,length,!signed);
         if(base==2)answer+=bin;
         else if(base == 10)answer+=to_decimal(bin);
         else if(base == 8)answer+=to_octal(bin);
@@ -388,8 +401,8 @@ public class Binary
             String immediate = extract_bits(31,20,instruction,31,0);
             String val;
             if(OPCODE.equals("0010011") && (funct3.equals("001")|| funct3.equals("101"))) //shamt type
-                val=convert(from_binary_unsigned(immediate.substring(7)),false,base,32);//TODO why 32?
-            else val=convert(from_binary_signed(immediate),true,base,32);// TODO why 32?
+                val=convert(from_binary_unsigned(immediate.substring(7)),false,base,32);//32 is the length of the output produced
+            else val=convert(from_binary_signed(immediate),true,base,32);// 32 does not affect the correctness of the conversion in any way
             val+="_"+Syntax.get_id_of_base(base);
             command.append(word).append(" ").append(RD_name).append(",").append(RS1_name).append(",").append(val);
 
@@ -432,16 +445,16 @@ public class Binary
                     extract_bits(7,7,instruction,31,0)+
                     extract_bits(30,25,instruction,31,0)+
                     extract_bits(11,8,instruction,31,0);
-            String val = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
+            String val = convert(2*from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+RS2_name+","+val);
         }
-        else if(OPCODE.equals("0110111")||OPCODE.equals("0010111")) // TODO debug this
+        else if(OPCODE.equals("0110111")||OPCODE.equals("0010111"))
         {
             //U_TYPE;
             String RD = extract_bits(11,7,instruction,31,0);
             String RD_name = Syntax.name_of_register((int)from_binary_unsigned(RD));
             String immediate = extract_bits(31,12,instruction,31,0);
-            String value = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
+            String value = convert(from_binary_signed(immediate),true,base,32)+"_"+Syntax.get_id_of_base(base);
             String word = OPCODE.equals("0110111")?Syntax.LUI.words[0]:Syntax.AUIPC.words[0];
             command.append(word+" "+RD_name+","+value);
         }
@@ -454,7 +467,7 @@ public class Binary
                     extract_bits(19,12,instruction,31,0)+
                     extract_bits(20,20,instruction,31,0)+
                     extract_bits(30,21,instruction,31,0);
-            String value = convert(from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
+            String value = convert(2*from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(Syntax.JAL.words[0]+" "+RD_name+","+value);
         }
         else throw new Exception("unrecognized opcode");

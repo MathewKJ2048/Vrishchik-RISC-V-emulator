@@ -113,6 +113,10 @@ public class Compiler
             stream.delete(i1,i2);
             numbers.subList(i1,i2).clear();
         }
+        void replace(int i, char ch) // replaces index i with char ch
+        {
+            stream.replace(i,i+1,ch+"");
+        }
         int line_end(int from_index) // returns end of current line
         {
             for(int i=from_index;i<numbers.size()-1;i++)
@@ -137,11 +141,11 @@ public class Compiler
         void log(StringBuilder s)
         {
             if(stream.length() == 0)return;
-            s.append(numbers.get(0)).append("|");
+            s.append(numbers.get(0)).append("\t|");
             s.append((stream.charAt(0)));
             for(int i=1;i<stream.length();i++)
             {
-                if(numbers.get(i-1)!=numbers.get(i)) s.append("\n").append(numbers.get(i)).append("|");
+                if(numbers.get(i-1)!=numbers.get(i)) s.append("\n").append(numbers.get(i)).append("\t|");
                 s.append((stream.charAt(i)));
             }
         }
@@ -221,18 +225,28 @@ public class Compiler
         process_data(transcript.compilation);
         process_code(transcript.compilation);
 
-        transcript.binary.append("\nPC\t|              code              |purpose");
+        transcript.binary.append("\nPC\t|              code              |\tpurpose");
 
         for (Instruction instruction : l_pc) {
-            transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|").append(instruction.comment);
+            transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|\t").append(instruction.comment);
         }
         ready = true;
     }
 
     private static void scrub() throws Exception
     {
+        replace_tabs_with_spaces();
         remove_multi_line_comments();
         remove_single_line_comments();
+    }
+    private static void replace_tabs_with_spaces()
+    {
+        while(true)
+        {
+            int i = raw.stream.indexOf("\t");
+            if(i==-1)break;
+            raw.replace(i,' '); // TODO Syntax.WHITESPACE
+        }
     }
     private static void remove_multi_line_comments() throws Exception {
         /*
@@ -275,6 +289,7 @@ public class Compiler
         in which case, we ignore it
         once such a # has been located, everything from it to next '\n' is removed
         '\n' is not found in raw, so we need to find where the line number changes
+        the comment is replaced with ' '
          */
         List<Integer> start = new ArrayList<>();
         List<Integer> end = new ArrayList<>();
@@ -290,7 +305,8 @@ public class Compiler
         }
         for(int i=start.size()-1;i>=0;i--)
         {
-            raw.delete(start.get(i),end.get(i)+1);
+            raw.replace(start.get(i),' ');//TODO make this Syntax.WHITESPACE
+            raw.delete(start.get(i)+1,end.get(i)+1);
         }
     }
 
@@ -349,9 +365,29 @@ public class Compiler
                         if(sc.has_next_immediate())
                         {
                             long initial_value = Parser.parseLong(sc.next());
-                            l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
+                            String binary = "";
+                            if(!Binary.belongs_in_range(initial_value,32,true))
+                            {
+                                binary = Binary.to_binary_unsigned(initial_value,32);
+                                transcript.append("\nWARNING: number is too large for signed notation, thus it is assumed to be unsigned");
+                            }
+                            else
+                            {
+                                binary = Binary.to_binary_signed(initial_value,32);
+                            }
+                            String lower = binary.substring(21);
+                            String upper = binary.substring(0,20);;
+                            long upper_value = Binary.from_binary_unsigned(upper);
+                            if(lower.charAt(0)=='1')upper_value++;
+                            upper_value%=(1L<<20);
+                            upper = Binary.to_binary_unsigned(upper_value,20);
+                            // $t0 or R5 is used as a temporary register to transfer values into the memory
+                            // lui and addi together act as a li
+                            // $t0 is cleared immediately afterwards
+                            l_pc.add(new Instruction(Binary.lui(5,Binary.from_binary_signed(upper)),code_current,Syntax.WORD.words[0]+" "+Syntax.LUI.words[0]));
                             code_current+=4;
-                            //$t0 or R5 is used as a temporary register to transfer values into the memory
+                            l_pc.add(new Instruction(Binary.addi(5, 5, Binary.from_binary_signed(lower)), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
+                            code_current+=4;
                             l_pc.add(new Instruction(Binary.sw(0, 5, data_current), code_current, Syntax.WORD.words[0] + " " + Syntax.SW.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.WORD.words[0] + " " + Syntax.ANDI.words[0]));
@@ -367,6 +403,12 @@ public class Compiler
                         if(sc.has_next_immediate())
                         {
                             long initial_value = Parser.parseLong(sc.next());
+                            if(!Binary.belongs_in_range(initial_value,8,true))
+                            {
+                                transcript.append("WARNING: Number too large to be treated as a signed number, so unsigned format will be used");
+                                if(!Binary.belongs_in_range(initial_value,8,false))throw new Exception("Error: given number ("+initial_value+") in line "+data_section.get_number(sc.start())+" cannot be fit into a byte");
+                            }
+                            // no need to use lui here, since a single byte is only 8 bits and addi supprts 12 bits
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.BYTE.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sb(0, 5, data_current), code_current, Syntax.BYTE.words[0] + " " + Syntax.SB.words[0]));
@@ -384,7 +426,32 @@ public class Compiler
                         if(sc.has_next_immediate())
                         {
                             long initial_value = Parser.parseLong(sc.next());
-                            l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.SHORT.words[0] + " " + Syntax.ADDI.words[0]));
+                            if(!Binary.belongs_in_range(initial_value,16,true))
+                            {
+                                transcript.append("WARNING: Number too large to be treated as a signed number, so unsigned format will be used");
+                                if(!Binary.belongs_in_range(initial_value,16,false))throw new Exception("Error: given number ("+initial_value+") in line "+data_section.get_number(sc.start())+" cannot be fit into a short (2 bytes)");
+                            }
+                            String binary; // now a process similar to word is followed since only the ability to fit the number in the register needs to be checked
+                            if(!Binary.belongs_in_range(initial_value,32,true))
+                            {
+                                binary = Binary.to_binary_unsigned(initial_value,32);
+                            }
+                            else
+                            {
+                                binary = Binary.to_binary_signed(initial_value,32);
+                            }
+                            String lower = binary.substring(21);
+                            String upper = binary.substring(0,20);;
+                            long upper_value = Binary.from_binary_unsigned(upper);
+                            if(lower.charAt(0)=='1')upper_value++;
+                            upper_value%=(1L<<20);
+                            upper = Binary.to_binary_unsigned(upper_value,20);
+                            // $t0 or R5 is used as a temporary register to transfer values into the memory
+                            // lui and addi together act as a li
+                            // $t0 is cleared immediately afterwards
+                            l_pc.add(new Instruction(Binary.lui(5,Binary.from_binary_signed(upper)),code_current,Syntax.WORD.words[0]+" "+Syntax.LUI.words[0]));
+                            code_current+=4;
+                            l_pc.add(new Instruction(Binary.addi(5, 5, Binary.from_binary_signed(lower)), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sh(0, 5, data_current), code_current, Syntax.SHORT.words[0] + " " + Syntax.SH.words[0]));
                             code_current+=4;
@@ -841,7 +908,6 @@ public class Compiler
                         // (inci deci) li (beqz bnez bltz bgez blez bgtz) (lui auipc)
                         if(Syntax.LI.contains(token))
                         {
-                            System.out.println("LI identified");
                             String binary = "";
                             if(!Binary.belongs_in_range(value,32,true))
                             {
@@ -1002,6 +1068,7 @@ public class Compiler
                             {
                                 immediate = process_immediate(arg1,sc,transcript);
                             }
+                            System.out.println(immediate-code_current);
                             l_pc.add(new Instruction(Binary.jal(dest_add,immediate-code_current), code_current,Syntax.JAL.words[0]));
                         }
                         catch(Exception e)
@@ -1015,27 +1082,28 @@ public class Compiler
                         try
                         {
                             int dest_add = 1; // $ra by default
-                            int src_add = 0;
+                            int src_add = 0;  // zero by default
                             long immediate = 0;
-                            int r_c_add = process_register(sc.next(),sc,"first",transcript);
+                            int r_c_add = process_register(sc.next(),sc,"first",transcript); // compulsory register
                             if(sc.is_next_argument())
                             {
                                 String next = sc.next();
-                                if(next.contains(Syntax.IMMEDIATE_CLOSE))
+                                dest_add = r_c_add;
+                                if(next.contains(Syntax.IMMEDIATE_CLOSE)) // has immediate along with second register
                                 {
                                     immediate = process_immediate(next.substring(0,next.indexOf(Syntax.IMMEDIATE_OPEN)),sc,transcript);
                                     src_add = process_register(next.substring(next.indexOf(Syntax.IMMEDIATE_OPEN)+1,next.indexOf(Syntax.IMMEDIATE_CLOSE)),sc,"source",transcript);
                                 }
-                                else
+                                else // only one register and immediate, no second register
                                 {
                                     immediate = process_immediate(next,sc,transcript);
                                 }
                             }
-                            else
+                            else // only one register, so address must be stored in $ra
                             {
                                 src_add = r_c_add;
                             }
-                            //addressing is absolute here
+                            // no using PC relative addressing because rs is added
                             l_pc.add(new Instruction(Binary.jalr(src_add,dest_add,immediate), code_current,Syntax.JALR.words[0]));
                         }
                         catch(Exception e)
