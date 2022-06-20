@@ -4,25 +4,35 @@ import java.util.*;
 import java.io.*;
 
 public class Processor{
+    private static boolean is_frozen = false;
+    public static boolean is_frozen()
+    {
+        return is_frozen;
+    }
+    public static void freeze()
+    {
+        is_frozen = true;
+    }
+    public static void thaw()
+    {
+        is_frozen = false;
+    }
     static Database D = new Database();
     static Instruction_SET I = new Instruction_SET();
     static Extract_Reg R=new Extract_Reg();
     static Operations O = new Operations();
     static int j,i;
-    public static void execute_all(){
-        for(j=0;j<(i/4);j=D.PC/4)
-        {
-            System.out.println("line "+j+" executed");
-            O.IF();
-            O.IDRF();
-            O.EXE();
-            O.Mem();
-            O.WB();
-        }
-        System.out.println("Execution complete");
-    }
-    public static void execute_step(){
+    public static void execute_step()
+    {
+        if(is_frozen())return;
         O.IF();
+        if(O.IF_BUFF.S.equals("00000000000000000000000001110011")) // ECALL code
+        {
+            freeze();
+            D.PC+=4;
+            j++;
+            return;
+        }
         O.IDRF();
         O.EXE();
         O.Mem();
