@@ -470,7 +470,11 @@ public class Binary
             String value = convert(2*from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
             command.append(Syntax.JAL.words[0]+" "+RD_name+","+value);
         }
-        else throw new Exception("unrecognized opcode");
+        else if(OPCODE.equals("1110011"))
+        {
+            if(instruction.equals("00000000000000000000000001110011"))command.append(Syntax.ECALL.words[0]);
+        }
+        else throw new Exception("unrecognized opcode: "+OPCODE);
         return command.toString();
     }
     public static boolean belongs_in_range(long value, int number_of_bits, boolean signed)
