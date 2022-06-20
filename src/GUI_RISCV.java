@@ -290,6 +290,12 @@ public class GUI_RISCV extends JFrame
                                 break;
                             }
                             processor.Processor.execute_step();
+                            if(processor.Processor.is_frozen())
+                            {
+                                Environment.process();
+                                executionTabbedPane.setSelectedIndex(0);//autoshift to console
+                                if(Environment.output!=null)consoleTextArea.append(Environment.output);
+                            }
                             setRegisters();
                             setMemory();
                             try{paintMemory(control.memory_page);}catch(Exception ex){}
@@ -395,6 +401,7 @@ public class GUI_RISCV extends JFrame
                 catch (Exception ex)
                 {
                     JOptionPane.showMessageDialog(executionTab,ex.getMessage()+"\n"+ex.getStackTrace(),"Error",JOptionPane.ERROR_MESSAGE);
+                    executeFilenameTextField.setText("");
                 }
             }
         });
@@ -561,7 +568,8 @@ public class GUI_RISCV extends JFrame
         enterButton.addActionListener(e -> {
             String input = inputTextArea.getText();
             inputTextArea.setText("");
-
+            consoleTextArea.append(input); // it is essential that this is carried out first to prevent the execution thread from modifying the console at the same time
+            Environment.input = input;
         });
         consoleFontComboBox.addActionListener(e -> {
             int size = FONT_SIZES.get(consoleFontComboBox.getSelectedItem());
