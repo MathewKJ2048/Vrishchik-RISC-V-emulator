@@ -48,6 +48,14 @@ public class Processor{
     public static int PC(){
         return D.PC;
     }
+    public static void set_register(int index, int value)
+    {
+        D.R[index] = value;
+    }
+    public static void set_memory(int index, byte value)
+    {
+        D.Mem[index] = value;
+    }
     public static boolean is_over(){
         if(D.PC>=i){
             return true;
