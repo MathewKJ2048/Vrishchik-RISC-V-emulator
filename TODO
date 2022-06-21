@@ -1,4 +1,3 @@
-ECALLs (come up with calling codes)
 pipelining
 data forwarding
 deal with data integration (stack pointer)
@@ -8,6 +7,15 @@ compiler:
 GUI:
 make font change at runtime
 button placement for licence accepting
+disable executestep during ecall
+
+Environment:
+read char
+read string
+write word
+write char
+write string
+exit
 
 Documentation:
 features
@@ -22,13 +30,9 @@ registers
 guide to code
 
 
+
 ideas:
 successful compilation - would you like to overwrite binary?
 get current path (installer???)
-syscalls:
-  exit
-  read/write   byte half word   format
-		string        length vs null termination
-status: running vs waiting (allows for implementation of waiting for user input)
 generate report, not emulate
-font size adjustor for general font??
+font size adjustor for general font?? need to check to make sure that centering is not ruined. Maybe let the user edit config (boolean change_font)
