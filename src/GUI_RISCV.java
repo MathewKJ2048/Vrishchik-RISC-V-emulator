@@ -283,6 +283,7 @@ public class GUI_RISCV extends JFrame
                     {
                         try
                         {
+                            executeStepButton.setEnabled(false);
                             if(processor.Processor.is_over()) //TODO look into case where null file is given
                             {
                                 executeStepButton.setEnabled(false);   // these must happen only in the case processor is over, not just if thread dies
@@ -290,11 +291,12 @@ public class GUI_RISCV extends JFrame
                                 break;
                             }
                             processor.Processor.execute_step();
-                            if(processor.Processor.is_frozen())
+                            if(processor.Processor.is_frozen())executionTabbedPane.setSelectedIndex(0);//autoshift to console
+                            while(processor.Processor.is_frozen())
                             {
                                 Environment.process();
-                                executionTabbedPane.setSelectedIndex(0);//autoshift to console
                                 if(Environment.output!=null)consoleTextArea.append(Environment.output);
+                                Environment.output = null;
                             }
                             setRegisters();
                             setMemory();
@@ -308,6 +310,7 @@ public class GUI_RISCV extends JFrame
                                 executeAllButton.setEnabled(false);
                                 break;
                             }
+                            executeStepButton.setEnabled(true);
                         }
                         catch (Exception ingnored){}
                     }
@@ -512,6 +515,7 @@ public class GUI_RISCV extends JFrame
             execution_source_file = null;
             execution_binary = null;
             decompiled_binary = null;
+            Environment.reset();
             codeTextArea.setText("");
             executeFilenameTextField.setText("");
             consoleTextArea.setText("");
