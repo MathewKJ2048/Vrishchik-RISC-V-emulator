@@ -8,14 +8,11 @@ GUI:
 make font change at runtime
 button placement for licence accepting
 disable executestep during ecall
+base for decompiled code
+put bin and decompiled separately in compile tab
+breakpoints
 
 Environment:
-read char
-read string
-write word
-write char
-write string
-exit
 
 Documentation:
 features
