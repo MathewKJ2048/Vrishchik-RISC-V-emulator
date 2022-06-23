@@ -3,6 +3,7 @@
 import compiler.Binary;
 import compiler.Compiler;
 import compiler.Decompiler;
+import compiler.Syntax;
 
 import javax.swing.*;
 import java.awt.*;

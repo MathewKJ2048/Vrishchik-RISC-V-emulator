@@ -91,6 +91,7 @@ public class GUI_RISCV extends JFrame
         filetypeTextField.setText(file_type);
         this.directoryTextField.setText(default_directory.getAbsolutePath());
         this.LFComboBox.setSelectedItem(look_and_feel);
+        this.codeBaseComboBox.setSelectedIndex(2);// sets default base as 10
         //TODO write
         //this.consoleFontComboBox.setSelectedItem(FONT_SIZES.);
         setRegisters();
@@ -142,13 +143,16 @@ public class GUI_RISCV extends JFrame
     }
     public void set_execution_code()
     {
+        int base = Integer.parseInt(codeBaseComboBox.getSelectedItem().toString());
         int PC_current = processor.Processor.has_instructions()?processor.Processor.PC():0;
+        PCLabel.setText(Binary.convert(PC_current,true,base,32)+"");
         StringBuilder b = new StringBuilder();
-        b.append("\tPC\t"+decompiled_binary.get(0)+"\n");
-        for(int i=1;i<decompiled_binary.size();i++)
+        b.append("\n"); // to indicate the start of the execution code, purely for aesthetic reasons
+        for(int i=1;i<decompiled_binary.size();i++) // i starts at 1 to avoid .code
         {
-            String pointer = (4*(i-1)==PC_current)?"=>":"";
-            b.append(pointer+"\t"+(4*(i-1))+"\t"+decompiled_binary.get(i)+"\n");
+            int PC = 4*(i-1);
+            String pointer = (PC==PC_current)?"=>":"";
+            b.append(pointer+"\t"+Binary.convert(PC,true,base,32)+"\t"+decompiled_binary.get(i)+"\n");
         }
         codeTextArea.setText(b.toString());
     }
@@ -300,12 +304,11 @@ public class GUI_RISCV extends JFrame
                             }
                             setRegisters();
                             setMemory();
-                            try{paintMemory(control.memory_page);}catch(Exception ex){}
+                            try{paintMemory(control.memory_page);}catch(Exception ignored){}
                             set_execution_code();
                             control.to_execute=control.to_execute_all; // this decides whether the execution continues or not
                             if(processor.Processor.is_over())
                             {
-
                                 executeStepButton.setEnabled(false);
                                 executeAllButton.setEnabled(false);
                                 break;
@@ -385,7 +388,7 @@ public class GUI_RISCV extends JFrame
                 try
                 {
                     execution_binary = Files.readAllBytes(Paths.get(execution_source_file.getAbsolutePath()));
-                    Decompiler.decompile(execution_binary,10);//TODO look into option to set base
+                    Decompiler.decompile(execution_binary,Integer.parseInt(codeBaseComboBox.getSelectedItem().toString()));
                     decompiled_binary = Decompiler.get_source_lines();
                     set_execution_code();
                     executionTabbedPane.setSelectedIndex(1); // this is to set decompiled code when user loads code
@@ -512,11 +515,13 @@ public class GUI_RISCV extends JFrame
             control.is_active = false; // this ensure that the current thread dies
             control.to_execute = false;
             control.to_execute_all = false;
+            processor.Processor.thaw(); // incase the execution is in the middle of an ecall
             execution_source_file = null;
             execution_binary = null;
             decompiled_binary = null;
             Environment.reset();
             codeTextArea.setText("");
+            PCLabel.setText("");
             executeFilenameTextField.setText("");
             consoleTextArea.setText("");
             executeStepButton.setEnabled(false);
@@ -579,6 +584,11 @@ public class GUI_RISCV extends JFrame
             int size = FONT_SIZES.get(consoleFontComboBox.getSelectedItem());
             ConsoleFont = ConsoleFont.deriveFont((float) (size));
             set_look_and_feel();
+        });
+        codeBaseComboBox.addActionListener(e -> {
+            try{Decompiler.decompile(execution_binary,Integer.parseInt(codeBaseComboBox.getSelectedItem().toString()));
+            decompiled_binary = Decompiler.get_source_lines();}catch(Exception ignored){}
+            set_execution_code();
         });
     }
     private JFrame main = this;
@@ -686,6 +696,8 @@ public class GUI_RISCV extends JFrame
     private JRadioButton dolorRadioButton;
     private JComboBox comboBox1;
     private JTextArea LIDSATextArea;
+    private JComboBox codeBaseComboBox;
+    private JLabel PCLabel;
     private JButton filetypeChangeButton;
 
 }
