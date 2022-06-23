@@ -57,7 +57,7 @@ class Operations{
         int op = IDRF_BUFF.arr[0];
         int rs1 = D.R[IDRF_BUFF.arr[3]];
         int rs2 = D.R[IDRF_BUFF.arr[2]];
-        int Bimm = UTIL.SignToDecimal(S.substring(0, 1) + S.substring(24, 25) + S.substring(1, 7) + S.substring(20, 24));
+        int Bimm = 2*UTIL.SignToDecimal(S.substring(0, 1) + S.substring(24, 25) + S.substring(1, 7) + S.substring(20, 24));
         if (op == 27) {
             if (rs1 == rs2) {
                 D.PC = D.PC + Bimm;

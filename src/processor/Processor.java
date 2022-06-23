@@ -56,6 +56,10 @@ public class Processor{
     {
         D.Mem[index] = value;
     }
+    public static void skip_to_end()
+    {
+        D.PC = i;
+    }
     public static boolean is_over(){
         if(D.PC>=i){
             return true;

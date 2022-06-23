@@ -3,7 +3,7 @@ package processor;
 class Database{
     int[] R=new int[32];
     int PC;
-    Byte[] InstrMem=new Byte[1024];
+    Byte[] InstrMem=new Byte[1024*1042];
     Byte[] Mem = new Byte[5000];
     String Inst_Type(String s){
         return switch (s) {
