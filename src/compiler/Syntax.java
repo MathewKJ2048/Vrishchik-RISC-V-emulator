@@ -380,7 +380,7 @@ public class Syntax
         List<Base> l = new ArrayList<>(); // capital letters represent digits after 9
         l.add(new Base(2,new String[]{"b"}));
         l.add(new Base(8,new String[]{"o","q"}));
-        l.add(new Base(16,new String[]{"h","x"}));
+        l.add(new Base(16,new String[]{"x","h"}));
         l.add(DEFAULT_BASE);
         return l;
     }
@@ -417,17 +417,18 @@ public class Syntax
         catch(Exception ignored){} // ensures that s is not a literal
         if(s.length() == 0)return false;
         if(is_number(s.charAt(0)))return false;
+        outer:
         for(int i=0;i<s.length();i++)
         {
             char d = s.charAt(i);
-            for(char ch : VALID_SPECIAL_CHARACTERS)if(ch==d)continue;   // checks if d is a valid special character
-            if(!(is_number(d)||is_alphabet(d)))return false;
+            for(char ch : VALID_SPECIAL_CHARACTERS)if(ch==d)continue outer;   // checks if d is a valid special character
+            if(!(is_number(d)||is_alphabet(d))){return false;}
         }
         return true;
     }
     public static boolean is_label(String s)
     {
-        return LABEL_TERMINATOR.equals(s.charAt(s.length() - 1) + "");
+        return LABEL_TERMINATOR.equals(s.charAt(s.length() - 1) + ""); // TODO rewrite
     }
     public static boolean is_valid_label(String s)
     {

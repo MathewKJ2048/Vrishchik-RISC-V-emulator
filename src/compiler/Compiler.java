@@ -547,7 +547,7 @@ public class Compiler
             if (Syntax.MAIN.contains(item.name)) {
                 main_present = true;
                 for(Label item_ : l_lc)item_.address+=4; //inserting jump to main requires all other code labels to shift up
-                l_pc.add(new Instruction(Binary.jal(1, item.address), code_current, Syntax.JAL.words[0] + " " + Syntax.MAIN.words[0]));
+                l_pc.add(new Instruction(Binary.jal(1, item.address-code_current), code_current, Syntax.JAL.words[0] + " " + Syntax.MAIN.words[0]));
                 code_current+=4;
             }
         }
