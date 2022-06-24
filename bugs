@@ -1,6 +1,7 @@
 processor:
 
 compiler:
+not and noti cannot be done using xori
 
 GUI:
 
