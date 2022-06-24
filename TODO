@@ -7,9 +7,8 @@ compiler:
 GUI:
 make font change at runtime
 button placement for licence accepting
-disable executestep during ecall
-base for decompiled code
-put bin and decompiled separately in compile tab
+printing without leading 0s for conversion
+memory addresses base
 breakpoints
 
 Environment:
@@ -29,7 +28,6 @@ guide to code
 
 
 ideas:
-successful compilation - would you like to overwrite binary?
 get current path (installer???)
-generate report, not emulate
 font size adjustor for general font?? need to check to make sure that centering is not ruined. Maybe let the user edit config (boolean change_font)
+give pipeline result, don't simulate it
