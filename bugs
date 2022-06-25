@@ -1,10 +1,12 @@
 processor:
+xori not working
 
 compiler:
 not and noti cannot be done using xori
+failure to do li $t0, FEDCBA98
 
 GUI:
 
 decompiler:
 
-environment
+environment:
