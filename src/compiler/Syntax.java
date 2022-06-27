@@ -236,12 +236,12 @@ public class Syntax
         l.add(new Command(DEC,PSEUDO_TYPE,RR));
         l.add(new Command(MV,PSEUDO_TYPE,RR));
         l.add(new Command(SWP,PSEUDO_TYPE,RR,3));
-        l.add(new Command(NOT,PSEUDO_TYPE,R));
-        l.add(new Command(NEG,PSEUDO_TYPE,R));
-        l.add(new Command(SEQZ,PSEUDO_TYPE,R));
-        l.add(new Command(SNEZ,PSEUDO_TYPE,R));
-        l.add(new Command(SGTZ,PSEUDO_TYPE,R));
-        l.add(new Command(SLTZ,PSEUDO_TYPE,R));
+        l.add(new Command(NOT,PSEUDO_TYPE,RR));
+        l.add(new Command(NEG,PSEUDO_TYPE,RR));
+        l.add(new Command(SEQZ,PSEUDO_TYPE,RR));
+        l.add(new Command(SNEZ,PSEUDO_TYPE,RR));
+        l.add(new Command(SGTZ,PSEUDO_TYPE,RR));
+        l.add(new Command(SLTZ,PSEUDO_TYPE,RR));
         //Ri
         l.add(new Command(LUI,U_TYPE,Ri));
         l.add(new Command(AUIPC,U_TYPE,Ri));
@@ -428,7 +428,7 @@ public class Syntax
     }
     public static boolean is_label(String s)
     {
-        return LABEL_TERMINATOR.equals(s.charAt(s.length() - 1) + ""); // TODO rewrite
+        return s.endsWith(LABEL_TERMINATOR);
     }
     public static boolean is_valid_label(String s)
     {

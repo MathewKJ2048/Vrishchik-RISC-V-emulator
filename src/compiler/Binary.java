@@ -284,7 +284,25 @@ public class Binary
         }
         return answer.toString();
     }
-    public static String convert(long value,boolean signed,int base,int length)
+    public static String remove_leading_zeroes(String num)
+    {
+        StringBuilder answer = new StringBuilder("");
+        boolean flag = false;
+        for(int i=0;i<num.length();i++)
+        {
+            if(num.charAt(i)=='-')
+            {
+                answer.append("-");
+                continue;
+            }
+            else if(num.charAt(i)!='0')flag=true;
+            if(flag)answer.append(num.charAt(i));
+        }
+        if(answer.length()==0)answer.append("0"); // atleast one 0 is needed incase every digit is 0
+        else if(answer.length()==1 && answer.charAt(0)=='-')answer.replace(0,0,"0");
+        return answer.toString();
+    }
+    public static String convert(long value,boolean signed,int base,int length,boolean lead)
     {
         //produces a "length" long string where "value" is written in "base"
         String answer = "";
@@ -301,6 +319,7 @@ public class Binary
         else if(base == 10)answer+=to_decimal(bin);
         else if(base == 8)answer+=to_octal(bin);
         else if(base == 16)answer+=to_hexadecimal(bin);
+        if(!lead)answer = remove_leading_zeroes(answer);
         return answer;
     }
     public static String extract_bits( int l, int r, String b, int MSB_index, int LSB_index)// returns b[l:r] where b is b[MSBi:LSBi]
@@ -322,12 +341,11 @@ public class Binary
     }
 
 
-    public static String get_command(String instruction,int base,int code_current) throws Exception //TODO look into error thrown for getting comment
+    public static String get_command(String instruction,int base,int code_current) throws Exception
     {
         if(instruction.length()!=32)throw new Exception("Error: size mismatch");
         StringBuilder command = new StringBuilder("");
         String OPCODE = extract_bits(6,0,instruction,31,0);
-
         if(OPCODE.equals("0110011"))//R-type
         {
             String RD = extract_bits(11,7,instruction,31,0);
@@ -401,8 +419,8 @@ public class Binary
             String immediate = extract_bits(31,20,instruction,31,0);
             String val;
             if(OPCODE.equals("0010011") && (funct3.equals("001")|| funct3.equals("101"))) //shamt type
-                val=convert(from_binary_unsigned(immediate.substring(7)),false,base,32);//32 is the length of the output produced
-            else val=convert(from_binary_signed(immediate),true,base,32);// 32 does not affect the correctness of the conversion in any way
+                val=convert(from_binary_unsigned(immediate.substring(7)),false,base,32,false);//32 is the length of the output produced
+            else val=convert(from_binary_signed(immediate),true,base,32,false);// 32 does not affect the correctness of the conversion in any way
             val+="_"+Syntax.get_id_of_base(base);
             command.append(word).append(" ").append(RD_name).append(",").append(RS1_name).append(",").append(val);
 
@@ -423,7 +441,7 @@ public class Binary
             String RS1_name = Syntax.name_of_register((int)from_binary_unsigned(RS1));
             String RS2_name = Syntax.name_of_register((int)from_binary_unsigned(RS2));
             String immediate = extract_bits(31,25,instruction,31,0)+extract_bits(11,25,instruction,31,0);
-            String imm_val = convert(from_binary_unsigned(immediate),false,base,32)+"_"+Syntax.get_id_of_base(base);
+            String imm_val = convert(from_binary_unsigned(immediate),false,base,32,false)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+imm_val+"("+RS2_name+")");
         }
         else if(OPCODE.equals("1100011"))//B-type
@@ -445,7 +463,7 @@ public class Binary
                     extract_bits(7,7,instruction,31,0)+
                     extract_bits(30,25,instruction,31,0)+
                     extract_bits(11,8,instruction,31,0);
-            String val = convert(2*from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
+            String val = convert(2*from_binary_signed(immediate)+code_current,true,base,32,false)+"_"+Syntax.get_id_of_base(base);
             command.append(word+" "+RS1_name+","+RS2_name+","+val);
         }
         else if(OPCODE.equals("0110111")||OPCODE.equals("0010111"))
@@ -454,7 +472,7 @@ public class Binary
             String RD = extract_bits(11,7,instruction,31,0);
             String RD_name = Syntax.name_of_register((int)from_binary_unsigned(RD));
             String immediate = extract_bits(31,12,instruction,31,0);
-            String value = convert(from_binary_signed(immediate),true,base,32)+"_"+Syntax.get_id_of_base(base);
+            String value = convert(from_binary_signed(immediate),true,base,32,false)+"_"+Syntax.get_id_of_base(base);
             String word = OPCODE.equals("0110111")?Syntax.LUI.words[0]:Syntax.AUIPC.words[0];
             command.append(word+" "+RD_name+","+value);
         }
@@ -467,7 +485,7 @@ public class Binary
                     extract_bits(19,12,instruction,31,0)+
                     extract_bits(20,20,instruction,31,0)+
                     extract_bits(30,21,instruction,31,0);
-            String value = convert(2*from_binary_signed(immediate)+code_current,true,base,32)+"_"+Syntax.get_id_of_base(base);
+            String value = convert(2*from_binary_signed(immediate)+code_current,true,base,32,false)+"_"+Syntax.get_id_of_base(base);
             command.append(Syntax.JAL.words[0]+" "+RD_name+","+value);
         }
         else if(OPCODE.equals("1110011"))

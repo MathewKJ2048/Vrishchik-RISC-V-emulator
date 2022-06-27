@@ -195,7 +195,7 @@ public class Compiler
     {
         return transcript;
     }
-    public static void write(Path binary) throws Exception
+    public static byte[] get_binary()
     {
         //writing binary file
         byte[] b_array = new byte[l_pc.size()*4];
@@ -209,7 +209,7 @@ public class Compiler
                 b_array[4*i+j]=b;
             }
         }
-        Files.write(binary, b_array);
+        return b_array;
     }
     public static void compile(List<String> l_raw) throws Exception
     {
@@ -989,7 +989,7 @@ public class Compiler
                         {
                             l_pc.add(new Instruction(Binary.add(0,0,r_add), code_current,Syntax.CLR.words[0]+" "+Syntax.AND.words[0]));
                         }
-                        else if(Syntax.NOTI.contains(token))  // feeding in -1 makes every bit of value 1, a xor 1 = ~a
+                        else if(Syntax.NOTI.contains(token))  //TODO this might not work bc not every bit is inverted
                         {
                             l_pc.add(new Instruction(Binary.xori(r_add,r_add,-1), code_current,Syntax.NOTI.words[0]+" "+Syntax.XORI.words[0]));
                         }
