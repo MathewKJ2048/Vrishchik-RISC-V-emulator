@@ -5,6 +5,7 @@ import compiler.Decompiler;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import processor.Processor;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -24,6 +25,8 @@ import java.util.List;
 
 public class GUI_RISCV extends JFrame
 {
+    public static final String POINTER = "=>";
+    public static final String BREAKPOINT = "*";
     public static final String LAF_JSON_KEY = "Look and Feel";
     public static final String DEFAULT_DIRECTORY_PATH_JSON_KEY = "Default Directory Path";
     public static final String FILE_TYPE_JSON_KEY = "File Type";
@@ -76,7 +79,7 @@ public class GUI_RISCV extends JFrame
         {
             UIManager.setLookAndFeel(get_look_and_feel_location(look_and_feel));
             System.out.println(ConsoleFont.getSize());
-            //TODO solve this issue
+            //TODO solve this issue (font)
             //UIManager.put("TextArea.font", GUI_RISCV.ConsoleFont);
         }
         catch (Exception ex)
@@ -92,7 +95,8 @@ public class GUI_RISCV extends JFrame
         this.directoryTextField.setText(default_directory.getAbsolutePath());
         this.LFComboBox.setSelectedItem(look_and_feel);
         this.codeBaseComboBox.setSelectedIndex(2);// sets default base as 10
-        //TODO write
+        this.compilerBaseComboBox.setSelectedIndex(2);//sets default base as 10
+        //TODO write (font)
         //this.consoleFontComboBox.setSelectedItem(FONT_SIZES.);
         setRegisters();
         this.memorySizeComboBox.setSelectedItem("word");
@@ -141,18 +145,31 @@ public class GUI_RISCV extends JFrame
             JOptionPane.showMessageDialog(new JFrame(),"config.json not found, using default settings","Warning",JOptionPane.WARNING_MESSAGE);
         }
     }
-    public void set_execution_code()
+    public void set_compilation_code(List<String> code)
+    {
+        int base = Integer.parseInt(compilerBaseComboBox.getSelectedItem().toString());
+        StringBuilder b = new StringBuilder();
+        b.append("\n");
+        for(int i=1;i<code.size();i++)
+        {
+            int PC = 4*(i-1);
+            b.append(Binary.convert(PC,true,base,32,false)+"\t|"+code.get(i)+"\n");
+        }
+        compileDecompileTextArea.setText(b.toString());
+    }
+    public void set_execution_code() // global variable is used to avoid decompiling every time the pointer moves
     {
         int base = Integer.parseInt(codeBaseComboBox.getSelectedItem().toString());
         int PC_current = processor.Processor.has_instructions()?processor.Processor.PC():0;
-        PCLabel.setText(Binary.convert(PC_current,true,base,32)+"");
+        PCLabel.setText(Binary.convert(PC_current,true,base,32,false)+"");
         StringBuilder b = new StringBuilder();
         b.append("\n"); // to indicate the start of the execution code, purely for aesthetic reasons
         for(int i=1;i<decompiled_binary.size();i++) // i starts at 1 to avoid .code
         {
             int PC = 4*(i-1);
-            String pointer = (PC==PC_current)?"=>":"";
-            b.append(pointer+"\t"+Binary.convert(PC,true,base,32)+"\t"+decompiled_binary.get(i)+"\n");
+            String pointer = (PC==PC_current)?POINTER:"";
+            for(int j=0;j<breakpoints.size();j++)if(breakpoints.get(j) == PC)pointer+=BREAKPOINT;
+            b.append(pointer+"\t"+Binary.convert(PC,true,base,32,false)+"\t"+decompiled_binary.get(i)+"\n");
         }
         codeTextArea.setText(b.toString());
     }
@@ -189,7 +206,7 @@ public class GUI_RISCV extends JFrame
             {
                 int base = get_base(option);
                 if(base==-1)this.registersTextArea.setText("Unrecognized base");
-                s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base,32); //register size is always 32 bits
+                s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base,32,true); //register size is always 32 bits
             }
             b.append("R"+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
         }
@@ -220,7 +237,7 @@ public class GUI_RISCV extends JFrame
             {
                 int base = get_base(option);
                 if(base==-1)this.memoryTextArea.setText("Unrecognized base");
-                s = compiler.Binary.convert(value,memorySignedRadioButton.isSelected(),base,8*size);
+                s = compiler.Binary.convert(value,memorySignedRadioButton.isSelected(),base,8*size,true);
             }
             String index = "["+(size*i+size-1)+":"+(size*i)+"]";
             memory.add(index+(index.length()>=8?"":"\t")+"\t"+s+"\n");
@@ -288,20 +305,27 @@ public class GUI_RISCV extends JFrame
                         try
                         {
                             executeStepButton.setEnabled(false);
-                            if(processor.Processor.is_over()) //TODO look into case where null file is given
+                            if(processor.Processor.is_over())
                             {
                                 executeStepButton.setEnabled(false);   // these must happen only in the case processor is over, not just if thread dies
                                 executeAllButton.setEnabled(false);
                                 break;
                             }
                             processor.Processor.execute_step();
-                            if(processor.Processor.is_frozen())executionTabbedPane.setSelectedIndex(0);//autoshift to console
+                            if(processor.Processor.is_frozen())
+                            {
+                                executionTabbedPane.setSelectedIndex(0);//autoshift to console
+                                executeStepButton.setEnabled(false);
+                                executeAllButton.setEnabled(false);
+                            }
                             while(processor.Processor.is_frozen())
                             {
                                 Environment.process();
                                 if(Environment.output!=null)consoleTextArea.append(Environment.output);
                                 Environment.output = null;
                             }
+                            executeStepButton.setEnabled(true);
+                            executeAllButton.setEnabled(true);
                             setRegisters();
                             setMemory();
                             try{paintMemory(control.memory_page);}catch(Exception ignored){}
@@ -352,6 +376,7 @@ public class GUI_RISCV extends JFrame
             {
                 List<String> lines = Files.readAllLines(Paths.get(compilation_source_file.getAbsolutePath()));
                 compiler.Compiler.compile(lines);
+                compilation_binary = compiler.Compiler.get_binary();
             }
             catch(Exception ex)
             {
@@ -362,6 +387,16 @@ public class GUI_RISCV extends JFrame
             transcriptTextArea.setText(compiler.Compiler.get_transcript().get_compilation());
             binaryTextArea.setText(compiler.Compiler.get_transcript().get_binary());
             labelsTextArea.setText(compiler.Compiler.get_transcript().get_labels());
+            try
+            {
+                Decompiler.decompile(compilation_binary,Integer.parseInt(compilerBaseComboBox.getSelectedItem().toString()));
+                set_compilation_code(Decompiler.get_source_lines());
+            }
+            catch(Exception ex)
+            {
+                is_correct = false;
+                error = ex.getMessage();
+            }
             if(!is_correct)
             {
                 JOptionPane.showMessageDialog(compileTab,error,"Error",JOptionPane.ERROR_MESSAGE);
@@ -369,6 +404,23 @@ public class GUI_RISCV extends JFrame
             else
             {
                 JOptionPane.showMessageDialog(compileTab,compilation_source_file.getName()+" has been successfully compiled","Compilation Successful",JOptionPane.INFORMATION_MESSAGE);
+                if(JOptionPane.showConfirmDialog(compileTab,"Would you like to create a binary file")!=JOptionPane.YES_OPTION)return;
+                try
+                {
+                    String name = compilation_source_file.getName();
+                    name = name.substring(0,name.indexOf("."+filetypeTextField.getText()));
+                    Path destination = Paths.get("" + compilation_source_file.getParent() + "/" + name + ".bin");
+                    if(destination.toFile().exists()) // allows user to confirm overwriting on existing file
+                    {
+                        if(JOptionPane.showConfirmDialog(compileTab,name+".bin already exists.\nWould you like to overwrite it?")!=JOptionPane.YES_OPTION)return;
+                    }
+                    Files.write(destination,compilation_binary);
+                    JOptionPane.showMessageDialog(compileTab,name+".bin has been generated and stored in \n"+compilation_source_file.getParent());
+                }
+                catch(Exception ex)
+                {
+                    JOptionPane.showMessageDialog(CreateBinaryButton,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+                }
                 CreateBinaryButton.setEnabled(true);
             }
 
@@ -399,6 +451,10 @@ public class GUI_RISCV extends JFrame
                     control.is_active = true;
                     executeStepButton.setEnabled(true);
                     executeAllButton.setEnabled(true);
+                    setButton.setEnabled(true);
+                    removeAllButton.setEnabled(true);
+                    removeButton.setEnabled(true);
+                    breakpointTextField.setEditable(true);
                     enterButton.setEnabled(true);
                     inputTextArea.setEditable(true);
                     ExecutionThread et = new ExecutionThread();
@@ -416,15 +472,6 @@ public class GUI_RISCV extends JFrame
             {
                 System.out.println(control.to_execute);
                 control.to_execute = true;
-                /*
-                processor.Processor.execute_step();
-                setRegisters();
-                setMemory();
-                paintMemory(memory_page[0]);
-                set_execution_code();
-
-                if(processor.Processor.is_over())executeStepButton.setEnabled(false);
-                */
             }
             catch(Exception ex)
             {
@@ -476,7 +523,7 @@ public class GUI_RISCV extends JFrame
                 {
                     if(JOptionPane.showConfirmDialog(compileTab,name+".bin already exists.\nWould you like to overwrite it?")!=JOptionPane.YES_OPTION)return;
                 }
-                compiler.Compiler.write(destination);
+                Files.write(destination,compilation_binary);
                 JOptionPane.showMessageDialog(compileTab,name+".bin has been generated and stored in \n"+compilation_source_file.getParent());
             }
             catch(Exception ex)
@@ -529,9 +576,19 @@ public class GUI_RISCV extends JFrame
             enterButton.setEnabled(false);
             inputTextArea.setText("");
             inputTextArea.setEditable(false);
+            setButton.setEnabled(false);
+            removeButton.setEnabled(false);
+            removeAllButton.setEnabled(false);
+            breakpointMessageLabel.setText("");
+            breakpointTextField.setText("");
+            breakpointTextField.setEditable(false);
             executeLoadButton.setEnabled(true);
             dataForwardingRadioButton.setEnabled(true);
             processor.Processor.reset_instruction();
+            processor.Processor.reset_registers();
+            processor.Processor.reset_memory();
+            setRegisters();
+            setMemory();
             executionStatusLabel.setText("Waiting");
         });
         memorySignedRadioButton.addActionListener(e -> {setMemory();try{paintMemory(control.memory_page);}catch(Exception ex){}});
@@ -590,6 +647,61 @@ public class GUI_RISCV extends JFrame
             decompiled_binary = Decompiler.get_source_lines();}catch(Exception ignored){}
             set_execution_code();
         });
+        compilerBaseComboBox.addActionListener(e->{
+            try
+            {
+                Decompiler.decompile(compilation_binary,Integer.parseInt(compilerBaseComboBox.getSelectedItem().toString()));
+                set_compilation_code(Decompiler.get_source_lines());
+            }catch(Exception ignored){}
+        });
+        setButton.addActionListener(e -> {
+            String address = breakpointTextField.getText();
+            try
+            {
+                long PC = compiler.Parser.parseLong(address);
+                if(!compiler.Binary.belongs_in_range(PC,32,true) || Processor.get_max_PC_value()<PC)throw new Exception("out of range");
+                if(PC%4!=0)throw new Exception("misaligned address");
+                for(int i=0;i<breakpoints.size();i++)if(breakpoints.get(i)==PC)throw new Exception("breakpoint already exists");
+                breakpoints.add((int)PC);
+                breakpointMessageLabel.setText("Breakpoint set");
+                set_execution_code();
+            }
+            catch(Exception ex)
+            {
+                breakpointMessageLabel.setText("Error:"+ex.getMessage());
+            }
+        });
+        removeButton.addActionListener(e -> {
+            String address = breakpointTextField.getText();
+            try
+            {
+                long PC = compiler.Parser.parseLong(address);
+                if(!compiler.Binary.belongs_in_range(PC,32,true) || Processor.get_max_PC_value()<PC)throw new Exception("out of range");
+                if(PC%4!=0)throw new Exception("misaligned address");
+                for(int i=0;i<breakpoints.size();i++)if(breakpoints.get(i)==PC)
+                {
+                    breakpoints.remove(i);
+                    breakpointMessageLabel.setText("breakpoint removed");
+                }
+                if(!breakpointMessageLabel.getText().equals("breakpoint removed"))throw new Exception("no breakpoint found");
+
+                set_execution_code();
+            }
+            catch(Exception ex)
+            {
+                breakpointMessageLabel.setText("Error:"+ex.getMessage());
+            }
+        });
+        removeAllButton.addActionListener(e -> {
+            if(breakpoints.size()==0)
+            {
+                breakpointMessageLabel.setText("no breakpoints left");
+                return;
+            }
+            breakpoints.clear();
+            breakpointMessageLabel.setText("all breakpoints removed");
+            set_execution_code();
+        });
     }
     private JFrame main = this;
     private static String file_type = "s";
@@ -610,6 +722,7 @@ public class GUI_RISCV extends JFrame
         return look_and_feel;
     }
     private File compilation_source_file = null;
+    private byte[] compilation_binary = null;
     private File execution_source_file = null;
     private byte[] execution_binary = null;
     private List<String> decompiled_binary = null;
@@ -623,7 +736,6 @@ public class GUI_RISCV extends JFrame
     private JPanel executionTab;
     private JPanel helpTab;
     private JTabbedPane tabbedPane3;
-    private JTabbedPane compileOutputTabbedPane;
     private JButton compileButton;
     private JButton compileLoadButton;
     private JTextArea sourceTextArea;
@@ -636,14 +748,6 @@ public class GUI_RISCV extends JFrame
     private JTextField directoryTextField;
     private JButton directoryChangeButton;
     private JPanel compileChooserPanel;
-    private JPanel sourcePanel;
-    private JPanel labelsPanel;
-    private JPanel transcriptPanel;
-    private JPanel binaryPanel;
-    private JScrollPane sourceScrollPane;
-    private JScrollPane labelsScrollPane;
-    private JScrollPane transcriptScrollPane;
-    private JScrollPane binaryScrollPane;
     private JPanel settingsTab;
     private JTextField filetypeTextField;
     private JButton clearRegistersButton;
@@ -698,7 +802,26 @@ public class GUI_RISCV extends JFrame
     private JTextArea LIDSATextArea;
     private JComboBox codeBaseComboBox;
     private JLabel PCLabel;
+    private JTabbedPane compileOutputTabbedPane;
+    private JPanel sourcePanel;
+    private JScrollPane sourceScrollPane;
+    private JPanel labelsPanel;
+    private JScrollPane labelsScrollPane;
+    private JPanel transcriptPanel;
+    private JScrollPane transcriptScrollPane;
+    private JTabbedPane tabbedPane5;
+    private JPanel binaryPanel;
+    private JScrollPane binaryScrollPane;
+    private JComboBox compilerBaseComboBox;
+    private JLabel cyclesLabel;
+    private JTextArea compileDecompileTextArea;
+    private JTextField breakpointTextField;
+    private JButton setButton;
+    private JButton removeButton;
+    private JButton removeAllButton;
+    private JLabel breakpointMessageLabel;
     private JButton filetypeChangeButton;
+    private List<Integer> breakpoints = new ArrayList<>();
 
 }
 

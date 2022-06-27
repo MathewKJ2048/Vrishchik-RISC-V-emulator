@@ -113,7 +113,7 @@ public class Environment
             {
                 int base = arg2;
                 if(base==0)base=10;
-                output = ""+compiler.Binary.convert(arg1,arg3==0,base,32);
+                output = ""+compiler.Binary.convert(arg1,arg3==0,base,32,false);
             }
             catch(Exception e)
             {
@@ -176,7 +176,7 @@ public class Environment
                     bytes.append(Binary.to_binary_signed(b,8));
                 }
                 long value = Binary.from_binary_signed(bytes.toString());
-                String s = Binary.convert(value,arg3==0,base,size*8);
+                String s = Binary.convert(value,arg3==0,base,size*8,false);
                 if(!base_unspecified)s+="_"+ Syntax.get_id_of_base(base);
                 output = ""+s;
             }
