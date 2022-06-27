@@ -91,6 +91,10 @@ public class Processor{
         }
         has_instructions = false;
     }
+    public static int get_max_PC_value()
+    {
+        return i-1;
+    }
     public static void Read(byte[] binary) throws Exception
     {
         if(binary.length%4!=0)throw new Exception("unexpected length for binary file");
