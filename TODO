@@ -7,9 +7,9 @@ compiler:
 GUI:
 make font change at runtime
 button placement for licence accepting
-printing without leading 0s for conversion
+authors and licence
+decide help section stuff
 memory addresses base
-breakpoints
 
 Environment:
 
@@ -21,8 +21,6 @@ how to install/run
 how to use
 syntax commands
 syntax general
-syscall codes
-registers
 guide to code
 
 
