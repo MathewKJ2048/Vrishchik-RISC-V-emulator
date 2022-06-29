@@ -375,7 +375,7 @@ public class Compiler
                             {
                                 binary = Binary.to_binary_signed(initial_value,32);
                             }
-                            String lower = binary.substring(21);
+                            String lower = binary.substring(20);
                             String upper = binary.substring(0,20);;
                             long upper_value = Binary.from_binary_unsigned(upper);
                             if(lower.charAt(0)=='1')upper_value++;
@@ -383,14 +383,11 @@ public class Compiler
                             upper = Binary.to_binary_unsigned(upper_value,20);
                             // $t0 or R5 is used as a temporary register to transfer values into the memory
                             // lui and addi together act as a li
-                            // $t0 is cleared immediately afterwards
                             l_pc.add(new Instruction(Binary.lui(5,Binary.from_binary_signed(upper)),code_current,Syntax.WORD.words[0]+" "+Syntax.LUI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.addi(5, 5, Binary.from_binary_signed(lower)), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sw(0, 5, data_current), code_current, Syntax.WORD.words[0] + " " + Syntax.SW.words[0]));
-                            code_current+=4;
-                            l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.WORD.words[0] + " " + Syntax.ANDI.words[0]));
                             code_current+=4;
                             transcript.append("\n" + "value initialized as: ").append(initial_value);
                         }
@@ -412,8 +409,6 @@ public class Compiler
                             l_pc.add(new Instruction(Binary.addi(0, 5, initial_value), code_current, Syntax.BYTE.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sb(0, 5, data_current), code_current, Syntax.BYTE.words[0] + " " + Syntax.SB.words[0]));
-                            code_current+=4;
-                            l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.BYTE.words[0] + " " + Syntax.ANDI.words[0]));
                             code_current+=4;
                             transcript.append("\n" + "value initialized as: ").append(initial_value);
                         }
@@ -440,7 +435,7 @@ public class Compiler
                             {
                                 binary = Binary.to_binary_signed(initial_value,32);
                             }
-                            String lower = binary.substring(21);
+                            String lower = binary.substring(20);
                             String upper = binary.substring(0,20);;
                             long upper_value = Binary.from_binary_unsigned(upper);
                             if(lower.charAt(0)=='1')upper_value++;
@@ -454,8 +449,6 @@ public class Compiler
                             l_pc.add(new Instruction(Binary.addi(5, 5, Binary.from_binary_signed(lower)), code_current, Syntax.WORD.words[0] + " " + Syntax.ADDI.words[0]));
                             code_current+=4;
                             l_pc.add(new Instruction(Binary.sh(0, 5, data_current), code_current, Syntax.SHORT.words[0] + " " + Syntax.SH.words[0]));
-                            code_current+=4;
-                            l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.SHORT.words[0] + " " + Syntax.ANDI.words[0]));
                             code_current+=4;
                             transcript.append("\n" + "value initialized as: ").append(initial_value);
                         }
@@ -504,8 +497,6 @@ public class Compiler
                                 code_current+=4;
                                 l_pc.add(new Instruction(Binary.sb(0, 5, data_current), code_current, (Syntax.is_printable_ASCII(d)?("'"+d+"'"):(""+((int)d))) + " " + Syntax.SB.words[0]));
                                 code_current+=4;
-                                l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, (Syntax.is_printable_ASCII(d)?("'"+d+"'"):(""+((int)d))) + " " + Syntax.ANDI.words[0]));
-                                code_current+=4;
                                 data_current+=1;
                             }
                             transcript.append("\n" + "space allocated and string initialized as: ").append(s);
@@ -521,6 +512,9 @@ public class Compiler
                 else throw new Exception("Unrecognized token in line "+data_section.get_number(sc.start()));
             }
         transcript.append("\n");
+        //ensures $t0 is clear
+        l_pc.add(new Instruction(Binary.andi(0, 5, 0), code_current, Syntax.WORD.words[0] + " " + Syntax.ANDI.words[0]));
+        code_current+=4;
     }
     private static void identify_code_labels(StringBuilder transcript) throws Exception
     {
@@ -906,7 +900,7 @@ public class Compiler
                         System.out.println("value is:"+ value);
                         if(sc.is_next_argument())throw new Exception("too many arguments for "+token+" in line "+code_section.numbers.get(sc.start()));
                         // (inci deci) li (beqz bnez bltz bgez blez bgtz) (lui auipc)
-                        if(Syntax.LI.contains(token))
+                        if(Syntax.LI.contains(token)) // this logic is used in word and short as well
                         {
                             String binary = "";
                             if(!Binary.belongs_in_range(value,32,true))
@@ -918,7 +912,7 @@ public class Compiler
                             {
                                 binary = Binary.to_binary_signed(value,32);
                             }
-                            String lower = binary.substring(21);
+                            String lower = binary.substring(20);
                             String upper = binary.substring(0,20);;
                             long upper_value = Binary.from_binary_unsigned(upper);
                             if(lower.charAt(0)=='1')upper_value++;
