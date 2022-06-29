@@ -687,12 +687,15 @@
                                   <component id="6875b" class="javax.swing.JButton" binding="enterButton">
                                     <constraints border-constraint="West"/>
                                     <properties>
+                                      <enabled value="false"/>
                                       <text value="Enter"/>
                                     </properties>
                                   </component>
                                   <component id="13c4" class="javax.swing.JTextArea" binding="inputTextArea">
                                     <constraints border-constraint="Center"/>
-                                    <properties/>
+                                    <properties>
+                                      <editable value="false"/>
+                                    </properties>
                                   </component>
                                 </children>
                               </grid>

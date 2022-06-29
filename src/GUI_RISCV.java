@@ -2,16 +2,14 @@
 
 import compiler.Binary;
 import compiler.Decompiler;
+import processor.Processor;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import processor.Processor;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -330,6 +328,7 @@ public class GUI_RISCV extends JFrame
                             setMemory();
                             try{paintMemory(control.memory_page);}catch(Exception ignored){}
                             set_execution_code();
+                            for(int PC_break : breakpoints)if(Processor.PC()==PC_break)control.to_execute_all=false;
                             control.to_execute=control.to_execute_all; // this decides whether the execution continues or not
                             if(processor.Processor.is_over())
                             {
@@ -387,23 +386,25 @@ public class GUI_RISCV extends JFrame
             transcriptTextArea.setText(compiler.Compiler.get_transcript().get_compilation());
             binaryTextArea.setText(compiler.Compiler.get_transcript().get_binary());
             labelsTextArea.setText(compiler.Compiler.get_transcript().get_labels());
-            try
-            {
-                Decompiler.decompile(compilation_binary,Integer.parseInt(compilerBaseComboBox.getSelectedItem().toString()));
-                set_compilation_code(Decompiler.get_source_lines());
-            }
-            catch(Exception ex)
-            {
-                is_correct = false;
-                error = ex.getMessage();
-            }
             if(!is_correct)
             {
                 JOptionPane.showMessageDialog(compileTab,error,"Error",JOptionPane.ERROR_MESSAGE);
             }
             else
             {
+                try
+                {
+                    Decompiler.decompile(compilation_binary,Integer.parseInt(compilerBaseComboBox.getSelectedItem().toString()));
+                    set_compilation_code(Decompiler.get_source_lines());
+                }
+                catch(Exception ex)
+                {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(compileTab,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 JOptionPane.showMessageDialog(compileTab,compilation_source_file.getName()+" has been successfully compiled","Compilation Successful",JOptionPane.INFORMATION_MESSAGE);
+                CreateBinaryButton.setEnabled(true);
                 if(JOptionPane.showConfirmDialog(compileTab,"Would you like to create a binary file")!=JOptionPane.YES_OPTION)return;
                 try
                 {
@@ -421,7 +422,6 @@ public class GUI_RISCV extends JFrame
                 {
                     JOptionPane.showMessageDialog(CreateBinaryButton,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
                 }
-                CreateBinaryButton.setEnabled(true);
             }
 
         });
@@ -656,6 +656,7 @@ public class GUI_RISCV extends JFrame
         });
         setButton.addActionListener(e -> {
             String address = breakpointTextField.getText();
+
             try
             {
                 long PC = compiler.Parser.parseLong(address);
@@ -665,6 +666,7 @@ public class GUI_RISCV extends JFrame
                 breakpoints.add((int)PC);
                 breakpointMessageLabel.setText("Breakpoint set");
                 set_execution_code();
+                breakpointTextField.setText("");
             }
             catch(Exception ex)
             {
@@ -686,6 +688,7 @@ public class GUI_RISCV extends JFrame
                 if(!breakpointMessageLabel.getText().equals("breakpoint removed"))throw new Exception("no breakpoint found");
 
                 set_execution_code();
+                breakpointTextField.setText("");
             }
             catch(Exception ex)
             {
