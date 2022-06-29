@@ -3,6 +3,7 @@ data forwarding
 deal with data integration (stack pointer)
 
 compiler:
+get rid of xor in data section
 
 GUI:
 make font change at runtime
