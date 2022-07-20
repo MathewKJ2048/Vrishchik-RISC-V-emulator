@@ -1,32 +1,27 @@
 pipelining
 data forwarding
-deal with data integration (stack pointer)
 
 compiler:
-get rid of xor in data section
 
 GUI:
 make font change at runtime
 button placement for licence accepting
 authors and licence
-decide help section stuff
-memory addresses base
 
 Environment:
 
 Documentation:
-features
-example programs
-commenting source code
-how to install/run
-how to use
-syntax commands
-syntax general
-guide to code
+ecall codes
+commands
+syntax
+users' manual
+registers
+README
+guide to source code
 
+Unit tests
 
-
-ideas:
-get current path (installer???)
-font size adjustor for general font?? need to check to make sure that centering is not ruined. Maybe let the user edit config (boolean change_font)
-give pipeline result, don't simulate it
+Example programs:
+add two numbers
+factorial
+look into more
