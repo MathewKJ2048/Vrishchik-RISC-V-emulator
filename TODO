@@ -23,5 +23,8 @@ Unit tests
 
 Example programs:
 add two numbers
-factorial
+factorial iterative
+factorial recursive
+fibonacci recursive
+sum elements of array
 look into more
