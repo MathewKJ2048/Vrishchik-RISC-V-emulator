@@ -98,9 +98,9 @@ class Operations{
             }
         } else if (op == 34) {//JALR
             if(IDRF_BUFF.arr[1]!=0)D.R[IDRF_BUFF.arr[1]] = D.PC + 4;
-            System.out.println("value:"+UTIL.SignToDecimal(S.substring(0, 12)));
-            System.out.println("PC:"+D.PC);
-            System.out.println("increment:"+D.R[IDRF_BUFF.arr[3]]+"+"+ UTIL.SignToDecimal(S.substring(0, 12)));
+            //System.out.println("value:"+UTIL.SignToDecimal(S.substring(0, 12)));
+            //System.out.println("PC:"+D.PC);
+            //System.out.println("increment:"+D.R[IDRF_BUFF.arr[3]]+"+"+ UTIL.SignToDecimal(S.substring(0, 12)));
             D.PC = D.R[IDRF_BUFF.arr[3]] + UTIL.SignToDecimal(S.substring(0, 12));
         } else if (op == 35) {//JAL
             if(IDRF_BUFF.arr[1]!=0)D.R[IDRF_BUFF.arr[1]] = D.PC + 4;
@@ -125,6 +125,8 @@ class Operations{
         EXE_BUFF.arr[1] = IDRF_BUFF.arr[1];
         EXE_BUFF.arr[2] = IDRF_BUFF.arr[2];
         EXE_BUFF.arr[3] = IDRF_BUFF.arr[3];
+        System.out.println("op is:"+op);
+        System.out.println("S is:"+S);
         if (op == 0) {
             EXE_BUFF.exe1 = rs1 + rs2;
             //D.R[IDRF_BUFF[1]]=rs1+rs2;
@@ -207,15 +209,23 @@ class Operations{
             }
 
         } else if (op == 13) {
-            EXE_BUFF.exe1 = rs1 ^ Integer.parseInt(S.substring(0, 12));
+            EXE_BUFF.exe1 = rs1 ^ UTIL.SignToDecimal(S.substring(0,12));
+            /*
+            System.out.println("XORi triggered");
+            System.out.println(S.substring(0,12));
+            try{System.out.println(Integer.parseInt(S.substring(0,12)));}catch(Exception e){e.printStackTrace();}
+            EXE_BUFF.exe1 = rs1 ;//^ Integer.parseInt(S.substring(0, 12));
+            System.out.println("This is a message");
+            System.out.println("PC:"+Processor.PC());*/
             //D.R[IDRF_BUFF[1]]= rs1^Integer.parseInt(S.substring(0,12));
 
+
         } else if (op == 14) {
-            EXE_BUFF.exe1 = rs1 | Integer.parseInt(S.substring(0, 12));
+            EXE_BUFF.exe1 = rs1 | UTIL.SignToDecimal(S.substring(0,12));
             //D.R[IDRF_BUFF[1]]= rs1|Integer.parseInt(S.substring(0,12));
 
         } else if (op == 15) {
-            EXE_BUFF.exe1 = rs1 & Integer.parseInt(S.substring(0, 12));
+            EXE_BUFF.exe1 = rs1 & UTIL.SignToDecimal(S.substring(0,12));
             //D.R[IDRF_BUFF[1]]= rs1&Integer.parseInt(S.substring(0,12));
 
         } else if (op == 16) {
