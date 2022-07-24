@@ -899,7 +899,7 @@ public class Compiler
                         long value = process_immediate(sc.next(),sc,transcript);
                         System.out.println("value is:"+ value);
                         if(sc.is_next_argument())throw new Exception("too many arguments for "+token+" in line "+code_section.numbers.get(sc.start()));
-                        // (inci deci) li (beqz bnez bltz bgez blez bgtz) (lui auipc)
+                        // (inci deci) (noti negi) li (beqz bnez bltz bgez blez bgtz) (lui auipc)
                         if(Syntax.LI.contains(token)) // this logic is used in word and short as well
                         {
                             String binary = "";
@@ -928,6 +928,14 @@ public class Compiler
                         else if(Syntax.DECI.contains(token))
                         {
                             l_pc.add(new Instruction(Binary.addi(src_add,src_add,-value), code_current,Syntax.DECI.words[0]+" "+Syntax.ADDI.words[0]));
+                        }
+                        else if(Syntax.NEGI.contains(token))
+                        {
+                            l_pc.add(new Instruction(Binary.addi(0,src_add,-value), code_current, Syntax.NEGI.words[0]+" "+Syntax.ADDI.words[0]));
+                        }
+                        else if(Syntax.NOTI.contains(token))
+                        {
+                            l_pc.add(new Instruction(Binary.addi(0,src_add, ~value), code_current, Syntax.NOTI.words[0]+" "+Syntax.ADDI.words[0]));
                         }
                         else if(Syntax.BEQZ.contains(token))
                         {
@@ -978,14 +986,18 @@ public class Compiler
                     {
                         int r_add = process_register(sc.next(),sc,"",transcript);
                         if(sc.is_next_argument())throw new Exception("too many arguments for "+token+" in line "+code_section.numbers.get(sc.start()));
-                        // clr noti jr
+                        // clr noti jr (inva invb)
                         if(Syntax.CLR.contains(token))
                         {
                             l_pc.add(new Instruction(Binary.add(0,0,r_add), code_current,Syntax.CLR.words[0]+" "+Syntax.AND.words[0]));
                         }
-                        else if(Syntax.NOTI.contains(token))  //TODO this might not work bc not every bit is inverted
+                        else if(Syntax.INVB.contains(token))  //TODO this might not work bc not every bit is inverted
                         {
-                            l_pc.add(new Instruction(Binary.xori(r_add,r_add,-1), code_current,Syntax.NOTI.words[0]+" "+Syntax.XORI.words[0]));
+                            l_pc.add(new Instruction(Binary.xori(r_add,r_add,-1), code_current,Syntax.INVB.words[0]+" "+Syntax.XORI.words[0]));
+                        }
+                        else if(Syntax.INVA.contains(token))
+                        {
+                            l_pc.add(new Instruction(Binary.sub(0,r_add,r_add), code_current,Syntax.INVA.words[0]+" "+Syntax.SUB.words[0]));
                         }
                         else if(Syntax.JR.contains(token))
                         {

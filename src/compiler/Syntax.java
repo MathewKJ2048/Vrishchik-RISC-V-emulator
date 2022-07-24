@@ -137,6 +137,7 @@ public class Syntax
     public static final Keyword DEC = new Keyword(new String[]{"dec"});
     public static final Keyword INC = new Keyword(new String[]{"inc"});
     public static final Keyword NEG = new Keyword(new String[]{"neg"});
+    public static final Keyword NEGI = new Keyword(new String[]{"negi"});
     public static final Keyword SEQZ = new Keyword(new String[]{"seqz"});
     public static final Keyword SNEZ = new Keyword(new String[]{"snez"});
     public static final Keyword SLTZ = new Keyword(new String[]{"sltz"});
@@ -145,7 +146,7 @@ public class Syntax
     public static final Keyword DECI = new Keyword(new String[]{"deci"});
     public static final Keyword CLR = new Keyword(new String[]{"clr"});
     public static final Keyword NOT = new Keyword(new String[]{"not"});
-    public static final Keyword NOTI = new Keyword(new String[]{"noti","inv"});
+    public static final Keyword NOTI = new Keyword(new String[]{"noti"});
     public static final Keyword J = new Keyword(new String[]{"j","jmp"});
     public static final Keyword JR = new Keyword(new String[]{"jr"});
     public static final Keyword RET = new Keyword(new String[]{"ret"});
@@ -161,6 +162,8 @@ public class Syntax
     public static final Keyword JAL = new Keyword(new String[]{"jal"});
     public static final Keyword JALR = new Keyword(new String[]{"jalr"});
     public static final Keyword ECALL = new Keyword(new String[]{"ecall","syscall"});
+    public static final Keyword INVA = new Keyword(new String[]{"inva"});
+    public static final Keyword INVB = new Keyword(new String[]{"invb"});
     //public static final Keyword  = new Keyword(new String[]{""});
     //
     static class Command
@@ -254,10 +257,13 @@ public class Syntax
         l.add(new Command(BLEZ,PSEUDO_TYPE,Ri));
         l.add(new Command(BGTZ,PSEUDO_TYPE,Ri));
         l.add(new Command(BGEZ,PSEUDO_TYPE,Ri));
+        l.add(new Command(NOTI,PSEUDO_TYPE,Ri));
+        l.add(new Command(NEGI,PSEUDO_TYPE,Ri));
         //R
         l.add(new Command(CLR,PSEUDO_TYPE,R));
-        l.add(new Command(NOTI,PSEUDO_TYPE,R));
         l.add(new Command(JR,PSEUDO_TYPE,R));
+        l.add(new Command(INVA,PSEUDO_TYPE,R));
+        l.add(new Command(INVB,PSEUDO_TYPE,R));
         //i
         l.add(new Command(J,PSEUDO_TYPE,i));
         //$
@@ -295,12 +301,14 @@ public class Syntax
         {
             this.names = new ArrayList<>();
             this.names.add(name);
+            this.names.add("x"+address);
             this.address = address;
         }
         public Register(String[] names, int address)
         {
             this.names = new ArrayList<>();
             this.names.addAll(Arrays.asList(names));
+            this.names.add("x"+address);
             this.address = address;
         }
         public boolean is(String name)
