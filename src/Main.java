@@ -37,6 +37,7 @@ public class Main
         GUI_RISCV.load_preferences();
         UIManager.setLookAndFeel(GUI_RISCV.get_look_and_feel_location(GUI_RISCV.get_look_and_feel()));
         UIManager.put("TextArea.font",GUI_RISCV.get_console_font());
+        UIManager.put("EditorPane.font",GUI_RISCV.get_console_font());
         JFrame r = new GUI_RISCV();
     }
     public static void limit_check()

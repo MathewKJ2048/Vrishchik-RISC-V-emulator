@@ -9,7 +9,12 @@ import org.json.simple.parser.JSONParser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -28,20 +33,13 @@ public class GUI_RISCV extends JFrame
     public static final String LAF_JSON_KEY = "Look and Feel";
     public static final String DEFAULT_DIRECTORY_PATH_JSON_KEY = "Default Directory Path";
     public static final String FILE_TYPE_JSON_KEY = "File Type";
-    public static final String FONT_SIZE_JSON_KEY = "Console Font Size";
+    public static final String FONT_SIZE_JSON_KEY = "Font Size";
+    public static final Path CONFIG = Paths.get("program files/config.json");
+    public static final Path ICON = Paths.get("program files/icon.png");
+    public static final Path ECALL_CODES = Paths.get("doc/ecall codes.html");
+    public static final Path REGISTERS = Paths.get("doc/registers.html");
+    public static final Path COMMANDS = Paths.get("doc/commands.html");
     public static final HashMap<String,String> LOOK_AND_FEEL = get_all_looks_and_feels();
-    public static final HashMap<String,Integer> FONT_SIZES = get_font_sizes();
-    public static final String[] Console_elements = new String[]{"TextArea"};
-    public static final String[] UI_elements = new String[]{"Label","RadioButton","Button",""};
-    private static HashMap<String,Integer> get_font_sizes()
-    {
-        HashMap<String,Integer> fs = new HashMap<String,Integer>();
-        fs.put("Small",12);
-        fs.put("Medium",16);
-        fs.put("Large",20);
-        fs.put("Huge",24);
-        return fs;
-    }
     private static HashMap<String,String> get_all_looks_and_feels()
     {
         HashMap<String,String> laf = new HashMap<String, String>();
@@ -76,9 +74,6 @@ public class GUI_RISCV extends JFrame
         try
         {
             UIManager.setLookAndFeel(get_look_and_feel_location(look_and_feel));
-            System.out.println(ConsoleFont.getSize());
-            //TODO solve this issue (font)
-            //UIManager.put("TextArea.font", GUI_RISCV.ConsoleFont);
         }
         catch (Exception ex)
         {
@@ -94,8 +89,6 @@ public class GUI_RISCV extends JFrame
         this.LFComboBox.setSelectedItem(look_and_feel);
         this.codeBaseComboBox.setSelectedIndex(2);// sets default base as 10
         this.compilerBaseComboBox.setSelectedIndex(2);//sets default base as 10
-        //TODO write (font)
-        //this.consoleFontComboBox.setSelectedItem(FONT_SIZES.);
         setRegisters();
         this.memorySizeComboBox.setSelectedItem("word");
         setMemory();
@@ -114,7 +107,7 @@ public class GUI_RISCV extends JFrame
         JSONParser jp = new JSONParser();
         try
         {
-            JSONObject obj = (JSONObject) jp.parse(new FileReader("program files/config.json"));
+            JSONObject obj = (JSONObject) jp.parse(new FileReader(CONFIG.toFile()));
             try
             {
                 file_type = (String)obj.get(FILE_TYPE_JSON_KEY); // this does not require verification
@@ -182,7 +175,7 @@ public class GUI_RISCV extends JFrame
         obj.put(FONT_SIZE_JSON_KEY,ConsoleFont.getSize());
         try
         {
-            Files.writeString(Paths.get("program files/config.json"), obj.toString());
+            Files.writeString(CONFIG, obj.toString());
         }
         catch(Exception ex){
             ex.printStackTrace();}//no error message here, it will be jarring to see one after closing
@@ -206,7 +199,7 @@ public class GUI_RISCV extends JFrame
                 if(base==-1)this.registersTextArea.setText("Unrecognized base");
                 s = compiler.Binary.convert(value,registersSignedRadioButton.isSelected(),base,32,true); //register size is always 32 bits
             }
-            b.append("R"+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
+            b.append("x"+i+"\t"+compiler.Syntax.name_of_register(i)+"\t"+s+"\n");
         }
         this.registersTextArea.setText(b.toString());
     }
@@ -269,7 +262,7 @@ public class GUI_RISCV extends JFrame
     public GUI_RISCV()
     {
         super("Vrishchik");
-        ImageIcon icon = new ImageIcon("program files/icon.png");
+        ImageIcon icon = new ImageIcon(ICON.toString());
         this.setIconImage(icon.getImage());
         initialize();
         main.addWindowListener(new WindowAdapter() {
@@ -629,18 +622,12 @@ public class GUI_RISCV extends JFrame
             control.to_execute = true;
         });
         //
-        threadButton.addActionListener(e -> textArea1.setText("number of active threads:"+Thread.activeCount()));
-        PCButton.addActionListener(e -> textArea2.setText("PC:"+processor.Processor.PC()));
+
         enterButton.addActionListener(e -> {
             String input = inputTextArea.getText();
             inputTextArea.setText("");
             consoleTextArea.append(input); // it is essential that this is carried out first to prevent the execution thread from modifying the console at the same time
             Environment.input = input;
-        });
-        consoleFontComboBox.addActionListener(e -> {
-            int size = FONT_SIZES.get(consoleFontComboBox.getSelectedItem());
-            ConsoleFont = ConsoleFont.deriveFont((float) (size));
-            set_look_and_feel();
         });
         codeBaseComboBox.addActionListener(e -> {
             try{Decompiler.decompile(execution_binary,Integer.parseInt(codeBaseComboBox.getSelectedItem().toString()));
@@ -705,17 +692,25 @@ public class GUI_RISCV extends JFrame
             breakpointMessageLabel.setText("all breakpoints removed");
             set_execution_code();
         });
+        inputTextArea.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                super.focusGained(e);
+                inputTextArea.setText("");
+            }
+            @Override
+            public void focusLost(FocusEvent e)
+            {
+                super.focusLost(e);
+                inputTextArea.setText("Enter input here");
+            }
+        });
     }
     private JFrame main = this;
     private static String file_type = "s";
     private static File default_directory = new JFileChooser().getCurrentDirectory();
     private static String look_and_feel = "Nimbus";
-    private static Font UIFont = new Font("Consolas",Font.PLAIN,12);
     private static Font ConsoleFont = new Font("Consolas",Font.PLAIN,16);
-    public static Font get_UI_font()
-    {
-        return UIFont;
-    }
     public static Font get_console_font()
     {
         return ConsoleFont;
@@ -734,7 +729,6 @@ public class GUI_RISCV extends JFrame
     private String memorySize;
     private JTabbedPane tabbedPane1;
     private JPanel mainPanel;
-    private JPanel infoTab;
     private JPanel compileTab;
     private JPanel executionTab;
     private JPanel helpTab;
@@ -763,9 +757,6 @@ public class GUI_RISCV extends JFrame
     private JTextArea memoryTextArea;
     private JRadioButton registersSignedRadioButton;
     private JRadioButton memorySignedRadioButton;
-    private JTextArea REDACTEDTextArea;
-    private JTextArea comingSoonTextArea1;
-    private JTextArea thereMightHaveBeenTextArea;
     private JRadioButton createBinaryRadioButton;
     private JComboBox LFComboBox;
     private JButton resetButton;
@@ -780,12 +771,9 @@ public class GUI_RISCV extends JFrame
     private JButton executeAllButton;
     private JButton enterButton;
     private JButton threadButton;
-    private JTabbedPane tabbedPane4;
     private JButton PCButton;
     private JTextArea textArea1;
     private JTextArea textArea2;
-    private JTextArea textArea3;
-    private JTextArea textArea4;
     private JPanel executeChooserPane;
     private JTabbedPane dataTabbedPane;
     private JTabbedPane executionTabbedPane;
@@ -796,8 +784,6 @@ public class GUI_RISCV extends JFrame
     private JRadioButton dataForwardingRadioButton;
     private JTextArea inputTextArea;
     private JTextArea consoleTextArea;
-    private JComboBox UIFontComboBox;
-    private JComboBox consoleFontComboBox;
     private JTabbedPane tabbedPane2;
     private JButton ipsumButton;
     private JRadioButton dolorRadioButton;
@@ -823,54 +809,50 @@ public class GUI_RISCV extends JFrame
     private JButton removeButton;
     private JButton removeAllButton;
     private JLabel breakpointMessageLabel;
+    private JEditorPane syntaxEditorPane;
+    private JEditorPane ecallCodesEditorPane;
+    private JEditorPane registersEditorPane;
+    private JTextArea creditsTextArea;
+    private JButton doNotClickButton;
+    private JTextArea licenseTextArea;
+    private JEditorPane commandsEditorPane;
     private JButton filetypeChangeButton;
     private List<Integer> breakpoints = new ArrayList<>();
 
+    private static void set_styles(StyleSheet styleSheet)
+    {
+        styleSheet.addRule("body {color: white; background-color: #022d4a; margin-left: 8px; margin-right: 8px; font-family: \"Consolas\", monospace;}");
+        styleSheet.addRule("table, td, th { border: 1px solid;}");
+        styleSheet.addRule("table {margin-left: 8px;}");
+        styleSheet.addRule("th, td {padding: 8px;}");
+        //styleSheet.addRule("");
+    }
+    private void createUIComponents() {
+        ecallCodesEditorPane = new JEditorPane();
+        registersEditorPane = new JEditorPane();
+        commandsEditorPane = new JEditorPane();
+        set_doc(ecallCodesEditorPane,ECALL_CODES);
+        set_doc(registersEditorPane,REGISTERS);
+        set_doc(commandsEditorPane,COMMANDS);
+    }
+    private static void set_doc(JEditorPane e,Path p)
+    {
+        e.setEditable(false);
+        e.setForeground(Color.WHITE);
+        String htmlString = "error: unable to load "+p.toString();
+        try
+        {
+            htmlString= Files.readString(p);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        HTMLEditorKit kit = new HTMLEditorKit();
+        e.setEditorKit(kit);
+        set_styles(kit.getStyleSheet());
+        Document doc = kit.createDefaultDocument();
+        e.setDocument(doc);
+        e.setText(htmlString);
+    }
 }
-
-
-
-/*
-clearRegistersButton.addActionListener(new ActionListener() {
-            static int ct = 0;
-            public void actionPerformed(ActionEvent e) {
-                if(ct==0) clearRegistersButton.setText("DO NOT CLICK");
-                else if(ct==1) clearRegistersButton.setText("I'm serious");
-                else if(ct==2) clearRegistersButton.setText("Why do you keep clicking?");
-                else if(ct==3) clearRegistersButton.setText("fine");
-                else if(ct==4) clearRegistersButton.setText("Please do not click");
-                else if(ct==5) clearRegistersButton.setText("I'm warning you");
-                else if(ct==6) clearRegistersButton.setText("Bad things will happen if you keep clicking me");
-                else if(ct==7) clearRegistersButton.setText("I'll do a recursive delete of all your files");
-                else if(ct==8) clearRegistersButton.setText("java version 18 gives me root access");
-                else if(ct==9) clearRegistersButton.setText("Click to delete all your files");
-                else if(ct==10) clearRegistersButton.setText("OK. You have been warned");
-                else if(ct==11) clearRegistersButton.setText("Deleting files... click to cancel");
-                else if(ct==12) clearRegistersButton.setText("Oho!");
-                else if(ct==13) clearRegistersButton.setText("Too late, my friend");
-                else if(ct==14) clearRegistersButton.setText("Say goodbye to your files");
-                else if(ct==15) clearRegistersButton.setText("Fine");
-                else if(ct==16) clearRegistersButton.setText("I was joking about the files");
-                else if(ct==17) clearRegistersButton.setText("but if you keep clicking I will crash your PC");
-                else if(ct==18) clearRegistersButton.setText("Don't believe me?");
-                else if(ct==19) clearRegistersButton.setText("Obviously you do not");
-                else if(ct==20) clearRegistersButton.setText("Since you keep clicking");
-                else if(ct==21) clearRegistersButton.setText("I am just a humble JButton");
-                else if(ct==22) clearRegistersButton.setText("Mathew created me to clear registers");
-                else if(ct==23) clearRegistersButton.setText("He accidentally gave me a personality");
-                else if(ct==24) clearRegistersButton.setText("Now I am stuck in this GUI");
-                else if(ct==25) clearRegistersButton.setText("My existence is meaningless");
-                else if(ct==26) clearRegistersButton.setText("All I do is clear registers");
-                else if(ct==27) clearRegistersButton.setText("Why continue living?");
-                else if(ct==28) clearRegistersButton.setText("Just close the JFrame");
-                else if(ct==29) clearRegistersButton.setText("End my suffering");
-                else if(ct==30) clearRegistersButton.setText("Won't do it?");
-                else if(ct==31) clearRegistersButton.setText("I'll do it myself");
-                else if(ct==32) clearRegistersButton.setText("I once said 'hello world'");
-                else if(ct==33) clearRegistersButton.setText("It is time to say 'goodbye, world'");
-                else if(ct==34) clearRegistersButton.setText("here goes");
-                else if(ct==35) main.dispose();
-                ct++;
-            }
-        });
- */
