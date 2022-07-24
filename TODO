@@ -6,8 +6,6 @@ compiler:
 
 GUI:
 show pipeline
-make font change at runtime
-authors and licence
 help: scroll pane not working right
 
 Environment:
