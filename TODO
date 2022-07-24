@@ -13,11 +13,9 @@ help: scroll pane not working right
 Environment:
 
 Documentation:
-ecall codes
 commands
 syntax
 users' manual
-registers
 README
 guide to source code
 
