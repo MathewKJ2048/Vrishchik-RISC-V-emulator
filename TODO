@@ -1,12 +1,14 @@
+processor:
 pipelining
 data forwarding
 
 compiler:
 
 GUI:
+show pipeline
 make font change at runtime
-button placement for licence accepting
 authors and licence
+help: scroll pane not working right
 
 Environment:
 
@@ -18,8 +20,6 @@ users' manual
 registers
 README
 guide to source code
-
-Unit tests
 
 Example programs:
 add two numbers
