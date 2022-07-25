@@ -9,7 +9,7 @@ compiler:
 
 GUI:
 show pipeline
-help: scroll pane not working right
+info using html render
 
 Environment:
 
