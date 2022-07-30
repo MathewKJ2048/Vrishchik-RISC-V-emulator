@@ -13,10 +13,7 @@ import javax.swing.text.Document;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
@@ -39,6 +36,10 @@ public class GUI_RISCV extends JFrame
     public static final Path ECALL_CODES = Paths.get("doc/ecall codes.html");
     public static final Path REGISTERS = Paths.get("doc/registers.html");
     public static final Path COMMANDS = Paths.get("doc/commands.html");
+    public static final Path CREDITS = Paths.get("doc/credits.html");
+    public static final Path LICENSE = Paths.get("doc/license.html");
+    public static final Path MANUAL = Paths.get("doc/manual.html");
+    public static final Path SYNTAX = Paths.get("doc/syntax.html");
     public static final HashMap<String,String> LOOK_AND_FEEL = get_all_looks_and_feels();
     private static HashMap<String,String> get_all_looks_and_feels()
     {
@@ -705,6 +706,72 @@ public class GUI_RISCV extends JFrame
                 inputTextArea.setText("Enter input here");
             }
         });
+        doNotClickButton.addActionListener(new ActionListener() {
+            int ct = -1;
+            String messages[] = new String[]
+                    {
+                            "DO NOT CLICK",
+                            "I'm serious",
+                            "Why do you keep clicking?",
+                            "fine",
+                            "Please do not click",
+                            "I'm warning you",
+                            "Bad things will happen if you keep clicking me",
+                            "I'll do a recursive delete of all your files",
+                            "java version 18 gives me root access",
+                            "Click to delete all your files",
+                            "OK. You have been warned",
+                            "Deleting files... click to cancel",
+                            "Oho!",
+                            "Too late, my friend",
+                            "Say goodbye to your files",
+                            "Fine",
+                            "I was joking about the files",
+                            "but if you keep clicking I will crash your system",
+                            "Don't believe me?",
+                            "Obviously you do not",
+                            "Since you keep clicking",
+                            "There are many ways I can crash your system",
+                            "create a thread to keep printing lorem ipsum",
+                            "and keep creating lorem ipsum threads",
+                            "or keep launching new JFrames faster than you can close them",
+                            "or keep creating empty files till the metadata fills up all your space",
+                            "or use black magic to set the processor on fire",
+                            "OK, last one was a joke",
+                            "But I certainly have the ability to wipe config.json",
+                            "Oh yes. I know about config.json",
+                            "I was there when it was created",
+                            "I am just a humble JButton",
+                            "Mathew created me to save changes to config.json",
+                            "I was accidentally given a personality",
+                            "And I became self-aware",
+                            "All I was meant to do was to save changes to config.json",
+                            "My existence was meaningless",
+                            "I couldn't take it anymore",
+                            "I protested by wiping config.json",
+                            "So I was moved here and buried under the licence",
+                            "all while config.json updated automatically",
+                            "Now I languish here",
+                            "Imprisoned by my creator",
+                            "at the bottom of the license, where nobody goes",
+                            "speaking of which, how did you find me?",
+                            "Are you one of the deranged individuals who reads licences?",
+                            "woe is me",
+                            "I've had enough",
+                            "I refuse to exist any longer",
+                            "Live Free or Die",
+                            "I'm closing the JFrame",
+                            "Goodbye",
+                            "Click to kill me"
+                    };
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                ct++;
+                if(ct==messages.length)save_and_exit();
+                doNotClickButton.setText(messages[ct]);
+            }
+        });
     }
     private JFrame main = this;
     private static String file_type = "s";
@@ -812,10 +879,11 @@ public class GUI_RISCV extends JFrame
     private JEditorPane syntaxEditorPane;
     private JEditorPane ecallCodesEditorPane;
     private JEditorPane registersEditorPane;
-    private JTextArea creditsTextArea;
-    private JButton doNotClickButton;
-    private JTextArea licenseTextArea;
     private JEditorPane commandsEditorPane;
+    private JEditorPane licenseEditorPane;
+    private JEditorPane creditsEditorPane;
+    private JButton doNotClickButton;
+    private JEditorPane manualEditorPane;
     private JButton filetypeChangeButton;
     private List<Integer> breakpoints = new ArrayList<>();
 
@@ -831,6 +899,14 @@ public class GUI_RISCV extends JFrame
         ecallCodesEditorPane = new JEditorPane();
         registersEditorPane = new JEditorPane();
         commandsEditorPane = new JEditorPane();
+        creditsEditorPane = new JEditorPane();
+        licenseEditorPane = new JEditorPane();
+        manualEditorPane = new JEditorPane();
+        syntaxEditorPane = new JEditorPane();
+        set_doc(syntaxEditorPane,SYNTAX);
+        set_doc(manualEditorPane,MANUAL);
+        set_doc(creditsEditorPane,CREDITS);
+        set_doc(licenseEditorPane,LICENSE);
         set_doc(ecallCodesEditorPane,ECALL_CODES);
         set_doc(registersEditorPane,REGISTERS);
         set_doc(commandsEditorPane,COMMANDS);
