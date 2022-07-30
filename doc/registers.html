@@ -1,0 +1,103 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+    <h1> Registers </h1>
+    <p>
+        Standard RISC-V provides 32 registers for use by the programmer. 
+        Each register has a size of 4 bytes.
+        A summary of their uses is listed.<br>
+        <br>
+    </p>
+    <table>
+        <tr>
+            <th>number</th>
+            <th>name</th>
+            <th>description</th>
+            <th>saved by</th>
+        </tr>
+        <tr>
+            <td>x0</td>
+            <td>$zero</td>
+            <td>always zero</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>x1</td>
+            <td>$ra</td>
+            <td>return address</td>
+            <td>caller</td>
+        </tr>
+        <tr>
+            <td>x2</td>
+            <td>$sp</td>
+            <td>stack pointer</td>
+            <td><b>callee</b></td>
+        </tr>
+        <tr>
+            <td>x3</td>
+            <td>$gp</td>
+            <td>global pointer</td>
+            <td></td>
+        </tr>
+        
+        <tr>
+            <td>x4</td>
+            <td>$tp</td>
+            <td>thread pointer</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>x5</td>
+            <td>$t0</td>
+            <td>temporary return address</td>
+            <td>caller</td>
+        </tr>
+        <tr>
+            <td>x6-7</td>
+            <td>$t1-2</td>
+            <td>temporary</td>
+            <td>caller</td>
+        </tr>
+        <tr>
+            <td>x8</td>
+            <td>$s0 / $fp</td>
+            <td>saved register / frame pointer</td>
+            <td><b>callee</b></td>
+        </tr>
+        <tr>
+            <td>x9</td>
+            <td>$s1</td>
+            <td>saved register</td>
+            <td><b>callee</b></td>
+        </tr>
+        <tr>
+            <td>x10-11</td>
+            <td>$a0-1</td>
+            <td>function argument / return value</td>
+            <td>caller</td>
+        </tr>
+        <tr>
+            <td>x12-17</td>
+            <td>$a2-7</td>
+            <td>function argument</td>
+            <td>caller</td>
+        </tr>
+        <tr>
+            <td>x18-27</td>
+            <td>$s2-11</td>
+            <td>saved register</td>
+            <td><b>callee</b></td>
+        </tr>
+        <tr>
+            <td>x28-31</td>
+            <td>$t3-6</td>
+            <td>temporary</td>
+            <td>caller</td>
+        </tr>
+    </table>
+    <br>
+    <br>
+    </body>
+</html>

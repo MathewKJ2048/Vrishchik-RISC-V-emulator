@@ -1,0 +1,474 @@
+<html>
+<head>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h1>Commands</h1>
+    <h2>Overview:</h2>
+    <p>
+        The following conventions hold:
+        <ul>
+            <li><b>Rn</b> stands for an arbitrary register, where n is a number from 0 to 31.</li>
+            <li><b>imm</b> stands for an immediate value, which may be a literal, a code label or a data label.</li>
+            <li><b>(Rn)</b> stands for an optional argument. <br>
+                <b>imm</b> is equivalent to <b>imm(R0)</b>.</li>
+            <li><b>memory[x:y]</b> stands for the contiguous memory location from the y<sup>th</sup> bit to the x<sup>th</sup> bit, with y > x. <br>
+                If y=x, <b>memory[x]</b> is used.</li>
+            <li><b>PC</b> represents the program counter, whose value must always be a multiple of 4.</li>
+        </ul>
+    </p>
+    <h2>Arithmetic commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>add R1, R2, R3</td>
+            <td>R1 = R2 + R3</td>
+            <td>adds the vaues stored in two registers</td>
+        </tr>
+        <tr>
+            <td>sub R1, R2, R3</td>
+            <td>R1 = R2 - R3</td>
+            <td>subtracts the value stored in one register from that in another</td>
+        </tr>
+        <tr>
+            <td>inc R1, R2</td>
+            <td>R1 = R1 + R2</td>
+            <td>increases the value of the first register by the value stored in the second</td>
+        </tr>
+        <tr>
+            <td>dec R1, R2</td>
+            <td>R1 = R1 - R2</td>
+            <td>decreases the value of the first register by the value stored in the second</td>
+        </tr>
+        <tr>
+            <td>neg R1, R2</td>
+            <td>R1 = -R2</td>
+            <td>finds the negative of the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>addi R1, R2, imm</td>
+            <td>R1 = R2 + imm</td>
+            <td>adds an immediate value to the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>subi R1, R2, imm</td>
+            <td>R1 = R2 - imm</td>
+            <td>subtracts an immediate value from the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>inci R1, imm</td>
+            <td>R1 = R1 + imm</td>
+            <td>increases the value stored in a register by an immediate value</td>
+        </tr>
+        <tr>
+            <td>deci R1, imm</td>
+            <td>R1 = R1 - imm</td>
+            <td>decreases the value stored in a register by an immediate value</td>
+        </tr>
+        <tr>
+            <td>negi R1, imm</td>
+            <td>R1 = -imm</td>
+            <td>finds the negative of an immediate value</td>
+        </tr>
+        <tr>
+            <td>inva R1</td>
+            <td>R1 = -R1</td>
+            <td>inverts the sign of the value stored in a register</td>
+        </tr>
+    </table>
+    <h2>Bitwise commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>description</th>
+        </tr>
+        <tr>
+            <td>and R1, R2, R3</td>
+            <td>R1 = R2 & R3</td>
+            <td>finds the bitwise AND of the values stored in two registers</td>
+        </tr>
+        <tr>
+            <td>or R1, R2, R3</td>
+            <td>R1 = R2 | R3</td>
+            <td>finds the bitwise OR of the values stored in two registers</td>
+        </tr>
+        <tr>
+            <td>xor R1, R2, R3</td>
+            <td>R1 = R2 ^ R3</td>
+            <td>finds the bitwise XOR of the values stored in two registers</td>
+        </tr>
+        <tr>
+            <td>not R1, R2</td>
+            <td>R1 = ~R2</td>
+            <td>finds the bitwise NOT of the values stored in a register</td>
+        </tr>
+        <tr>
+            <td>sll R1, R2, R3</td>
+            <td>R1 = R2 &lt&lt R3</td>
+            <td>performs a logical left shift (sign not necessarily preserved)</td>
+        </tr>
+        <tr>
+            <td>srl R1, R2, R3</td>
+            <td>R1 = R2 &gt&gt R3</td>
+            <td>performs a logical right shift (sign not preserved) </td>
+        </tr>
+        <tr>
+            <td>sla R1, R2, R3</td>
+            <td>R1 = R2 &lt&lt R3</td>
+            <td>performs an arithmetic left shift (sign preserved)</td>
+        </tr>
+        <tr>
+            <td>sra R1, R2, R3</td>
+            <td>R1 = R2 &gt&gt R3</td>
+            <td>performs an arithmetic right shift (sign preserved)</td>
+        </tr>
+        <tr>
+            <td>andi R1, R2, imm</td>
+            <td>R1 = R2 & imm</td>
+            <td>finds the bitwise AND of an immediate value and the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>ori R1, R2, imm</td>
+            <td>R1 = R2 | imm</td>
+            <td>finds the bitwise OR of an immediate value and the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>xori R1, R2, imm</td>
+            <td>R1 = R2 ^ imm</td>
+            <td>finds the bitwise XOR of an immediate value and the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>noti R1, imm</td>
+            <td>R1 = ~imm</td>
+            <td>finds the bitwise NOT of an immediate value</td>
+        </tr>
+        <tr>
+            <td>invb R1</td>
+            <td>R1 = ~R1</td>
+            <td>inverts each bit of a register</td>
+        </tr>
+        <tr>
+            <td>slli R1, R2, imm</td>
+            <td>R1 = R2 &lt&lt imm</td>
+            <td>performs a logical left shift (sign not necessarily preserved)</td>
+        </tr>
+        <tr>
+            <td>srli R1, R2, imm</td>
+            <td>R1 = R2 &gt&gt imm</td>
+            <td>performs a logical right shift (sign not preserved) </td>
+        </tr>
+        <tr>
+            <td>slai R1, R2, imm</td>
+            <td>R1 = R2 &lt&lt imm</td>
+            <td>performs an arithmetic left shift (sign preserved)</td>
+        </tr>
+        <tr>
+            <td>srai R1, R2, imm</td>
+            <td>R1 = R2 &gt&gt imm</td>
+            <td>performs an arithmetic right shift (sign preserved)</td>
+        </tr>
+    </table>
+    <h2>Memory commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>lw R1, imm(R2)</td>
+            <td>R1 = memory[R2+imm+3:R2+imm]</td>
+            <td>loads a word from the memory location to the first register</td>
+        </tr>
+        <tr>
+            <td>lh R1, imm(R2)</td>
+            <td></td>
+            <td>loads a half from the memory location to the first register</td>
+        </tr>
+        <tr>
+            <td>lb R1, imm(R2)</td>
+            <td></td>
+            <td>loads a byte from the memory location to the first register</td>
+        </tr>
+        <tr>
+            <td>lhu R1, imm(R2)</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>lbu R1, imm(R2)</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>sw R1, imm(R2)</td>
+            <td>memory[imm+R2+3:imm+R2] = R1</td>
+            <td>loads the value stored in a register into a word-sized space in the memory</td>
+        </tr>
+        <tr>
+            <td>sh R1, imm(R2)</td>
+            <td>memory[imm+R2+1:imm+R2] = R1</td>
+            <td>loads the value stored in a register into a half-sized space in the memory</td>
+        </tr>
+        <tr>
+            <td>sb R1, imm(R2)</td>
+            <td>memory[imm+R2] = R1</td>
+            <td>loads the value stored in a register into a byte-sized space in the memory</td>
+        </tr>
+    </table>
+    <h2>Conditional jump commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>beq R1, R2, imm</td>
+            <td>PC = (R1==R2) ? imm : PC</td>
+            <td>branches if values stored in two registers are equal</td>
+        </tr>
+        <tr>
+            <td>bne R1, R2, imm</td>
+            <td>PC = (R1!=R2) ? imm : PC</td>
+            <td>branches if the values stored in two registers are unequal</td>
+        </tr>
+        <tr>
+            <td>blt R1, R2, imm</td>
+            <td>PC = (R1&ltR2) ? imm : PC</td>
+            <td>branches if the signed value stored in the first register is less than the signed value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>ble R1, R2, imm</td>
+            <td>PC = (R1&lt=R2) ? imm : PC</td>
+            <td>branches if the signed value stored in the first register is less than or equal to the signed value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>bltu R1, R2, imm</td>
+            <td>PC = (R1&ltR2) ? imm : PC</td>
+            <td>branches if the unsigned value stored in the first register is less than the unsigned value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>bleu R1, R2, imm</td>
+            <td>PC = (R1&lt=R2) ? imm : PC</td>
+            <td>branches if the unsigned value stored in the first register is less than or equal to the unsigned value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>bgt R1, R2, imm</td>
+            <td>PC = (R1&gtR2) ? imm : PC</td>
+            <td>branches if the signed value stored in the first register is greater than the signed value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>bge R1, R2, imm</td>
+            <td>PC = (R1&gt=R2) ? imm : PC</td>
+            <td>branches if the signed value stored in the first register is greater than or equal to the signed value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>bgtu R1, R2, imm</td>
+            <td>PC = (R1&gtR2) ? imm : PC</td>
+            <td>branches if the unsigned value stored in the first register is greater than the unsigned value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>bgeu R1, R2, imm</td>
+            <td>PC = (R1&gt=R2) ? imm : PC</td>
+            <td>branches if the unsigned value stored in the first register is greater than or equal to the unsigned value stored in the second register</td>
+        </tr>
+        <tr>
+            <td>beqz R1, imm</td>
+            <td>PC = (R1==0) ? imm : PC</td>
+            <td>branches if the value stored in the given register is 0</td>
+        </tr>
+        <tr>
+            <td>bnez R1, imm</td>
+            <td>PC = (R1==0) ? imm : PC</td>
+            <td>branches if the value stored in the given register is not 0</td>
+        </tr>
+        <tr>
+            <td>bltz R1, imm</td>
+            <td>PC = (R1&lt0) ? imm : PC</td>
+            <td>branches if the value stored in the given register is less than 0</td>
+        </tr>
+        <tr>
+            <td>blez R1, imm</td>
+            <td>PC = (R1&lt=0) ? imm : PC</td>
+            <td>branches if the value stored in the given register less than or equal to is 0</td>
+        </tr>
+        <tr>
+            <td>bgtz R1, imm</td>
+            <td>PC = (R1&gt0) ? imm : PC</td>
+            <td>branches if the value stored in the given register is greater than 0</td>
+        </tr>
+        <tr>
+            <td>bgez R1, imm</td>
+            <td>PC = (R1&gt=0) ? imm : PC</td>
+            <td>branches if the value stored in the given register is greater than or equal to 0</td>
+        </tr>
+    </table>
+    <h2>Unconditional jump commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>j imm</td>
+            <td>PC = imm</td>
+            <td>jumps to the instruction memory address represented by imm</td>
+        </tr>
+        <tr>
+            <td>jr R1</td>
+            <td>PC = R1</td>
+            <td>jumps to the instruction memory address represented by the value stored in a register</td>
+        </tr>
+        <tr>
+            <td>jal</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>jalr R1</td>
+            <td>PC = R1<br>$ra = PC + 4</td>
+            <td>jumps to the instruction memory address represented by the value stored in a register and sets the value of the return address register equal to PC+4</td>
+        </tr>
+        <tr>
+            <td>jalr R1, imm(R2)</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>ret</td>
+            <td>PC = $ra</td>
+            <td>jumps to the  stored as the return address</td>
+        </tr>
+    </table>
+    <h2>Conditional assignment commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>slt R1, R2, R3</td>
+            <td>R1 = R2&ltR3 ? 1 : 0</td>
+            <td>sets the value of a register to 1 if the signed value stored in the second register is less than the signed value stored in the third register</td>
+        </tr>
+        <tr>
+            <td>sgt R1, R2, R3</td>
+            <td>R1 = R2&gtR3 ? 1 : 0</td>
+            <td>sets the value of a register to 1 if the signed value stored in the second register is greater than the signed value stored in the third register</td>
+        </tr>
+        <tr>
+            <td>sltu R1, R2, R3</td>
+            <td>R1 = R2&ltR3 ? 1 : 0</td>
+            <td>sets the value of a register to 1 if the unsigned value stored in the second register is less than the unsigned value stored in the third register</td>
+        </tr>
+        <tr>
+            <td>sgtu R1, R2, R3</td>
+            <td>R1 = R2&gtR3 ? 1 : 0</td>
+            <td>sets the value of a register to 1 if the unsigned value stored in the second register is greater than the unsigned value stored in the third register</td>
+        </tr>
+        <tr>
+            <td>seqz R1, R2</td>
+            <td>R1 = R2==0 ? 1 : 0</td>
+            <td>sets the value of the first register to 0 if the value stored in the second register is 0</td>
+        </tr>
+        <tr>
+            <td>snez R1, R2</td>
+            <td>R1 = R2!=0 ? 1 : 0</td>
+            <td>sets the value of the first register to 0 if the value stored in the second register is not 0</td>
+        </tr>
+        <tr>
+            <td>sltz R1, R2</td>
+            <td>R1 = R2&lt0 ? 1 : 0</td>
+            <td>sets the value of the first register to 0 if the value stored in the second register is less than 0</td>
+        </tr>
+        <tr>
+            <td>sgtz  R1, R2</td>
+            <td>R1 = R2&gt0 ? 1 : 0</td>
+            <td>sets the value of the first register to 0 if the value stored in the second register is greater than 0</td>
+        </tr>
+        <tr>
+            <td>slti R1, R2, imm</td>
+            <td>R1 = R2&ltimm? 1 : 0</td>
+            <td>sets the value of a register to 1 if the signed value stored in the second register is less than the given 12-bit immediate value</td>
+        </tr>
+        <tr>
+            <td>sltiu R1, R2, imm</td>
+            <td>R1 = R2&ltimm? 1 : 0</td>
+            <td>sets the value of a register to 1 if the unsigned value stored in the second register is less than the given 12-bit immediate value</td>
+        </tr>
+    </table>
+    <h2>Miscellaneous commands</h2>
+    <table>
+        <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>li R1, imm</td>
+            <td>R1 = imm</td>
+            <td>loads a 32-bit immediate value into a register</td>
+        </tr>
+        <tr>
+            <td>lui R1, imm</td>
+            <td>R1 = imm*2<sup>12</sup></td>
+            <td>loads the upper 20 bits of a register with the an immediate value</td>
+        </tr>
+        <tr>
+            <td>auipc</td>
+            <td>PC = PC+imm*2<sup>12</sup></td>
+            <td>adds the given immediate value to the upper 20 bits of the program counter</td>
+        </tr>
+        <tr>
+            <td>mov R1, R2</td>
+            <td>R1 = R2</td>
+            <td>copies the value stored in a register to another register</td>
+        </tr>
+        <tr>
+            <td>swp R1, R2</td>
+            <td>R1 ⇌ R2</td>
+            <td>swaps the values stored in two registers</td>
+        </tr>
+        <tr>
+            <td>clr R1</td>
+            <td>R1 = 0</td>
+            <td>sets every bit of a register to 0</td>
+        </tr>
+        <tr>
+            <td>nop</td>
+            <td></td>
+            <td>no operation</td>
+        </tr>
+    </table>
+
+
+
+
+    base commands:
+J jal
+U lui,auipc
+B beq,bne,blt,bge,bltu,bgeu
+R add,sub,and,or,xor,sll,srl,sra,slt,sltu
+I jalr,lb,lh,lw,lbu,lhu,addi,slti,sltiu,xori,ori,andi,slli,slri,srai
+S sb,sh,sw
+
+input types:
+r1,i(r2): (lbu lhu) (jalr - true)
+r,i: (jal - true)
+i:  (jal - pseudo)
+r: (jalr - pseudo)
+
+
+
+//i can be offset or code label or data label
+//jal and jalr have two meanings
+</body>
+</html>

@@ -1,0 +1,87 @@
+<html>
+<head>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<h1> Ecall codes </h1>
+<p>
+The environment may be invoked by the use of the <b>ecall</b> command. 
+This is useful for tasks like writing output to and reading input from the console.
+The ecall codes used are unique to the Vrishchik environment.
+
+The ecall code is stored in <b>$a2</b><br>
+<br>
+</p>
+
+<table>
+    <tr>
+        <th>Code</th>
+        <th>Purpose</th>
+        <th>Arguments</th>
+        <th>Return</th>
+    </tr>
+    <tr>
+        <td>0</td>
+        <td>terminate</td>
+        <td>none</td>
+        <td>none</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>read word</td>
+        <td>none</td>
+        <td>$a0</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>read byte (character)</td>
+        <td>none</td>
+        <td>$a0 (low)</td>
+    </tr>
+<tr>
+        <td>3</td>
+        <td>read string (ASCII)</td>
+        <td>$a0 stores start memory address, $a1 stores buffer size (in bytes)</td>
+        <td>memory[$a0]</td>
+    </tr>
+<tr>
+        <td>4</td>
+        <td>print register</td>
+        <td>$a0 stores value to print,<br>$a1 stores base to print the value in,<br>$a3 is 0 if the value is to be treated as signed and not 0 otherwise</td>
+        <td>none</td>
+    </tr>
+<tr>
+        <td>5</td>
+        <td>print character</td>
+        <td>$a0 (low) stores the character to be printed in ASCII</td>
+        <td>none</td>
+    </tr>
+<tr>
+        <td>6</td>
+        <td>print byte</td>
+        <td>$a0 stores start memory address,<br>$a1 atores the base to print the value in,<br>$a3 is 0 if the value is to be treated as signed and not 0 otherwise</td>
+        <td>none</td>
+    </tr>
+<tr>
+        <td>7</td>
+        <td>print half</td>
+        <td>$a0 stores start memory address,<br>$a1 atores the base to print the value in,<br>$a3 is 0 if the value is to be treated as signed and not 0 otherwise</td>
+        <td>none</td>
+    </tr>
+<tr>
+        <td>8</td>
+        <td>print word</td>
+        <td>$a0 stores start memory address,<br>$a1 atores the base to print the value in,<br>$a3 is 0 if the value is to be treated as signed and not 0 otherwise</td>
+        <td>none</td>
+    </tr>
+
+
+</table>
+<p>
+If the argument for base is 0, base ten is assumed by default.
+<br>
+<br>
+</p>
+</body>
+
+</html>
