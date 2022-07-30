@@ -14,7 +14,7 @@ Note that config.json will initially be flagged as corrupted. Vrishchik automati
 
 ### For Linux:
 
-1. Download [linux.zip]()
+1. Download [linux.zip](https://github.com/MathewKJ2048/Vrishchik-RISC-V-emulator/blob/main/downloads/linux.zip?raw=true)
 2. Extract the contents.
 3. Give __run.sh__ permission to execute.
 4. Execute __run.sh__.
@@ -22,13 +22,13 @@ Note that config.json will initially be flagged as corrupted. Vrishchik automati
 
 ### For Windows:
 
-1. Download [windows_executable.zip]()
+1. Download [windows_executable.zip](https://github.com/MathewKJ2048/Vrishchik-RISC-V-emulator/blob/main/downloads/windows_executable.zip?raw=true)
 2. Extract the contents.
 3. Double-click __Vrishchik.exe__ to run the program.
 
 Alternatively,
 
-1. Download [windows_jar.zip]()
+1. Download [windows_jar.zip](https://github.com/MathewKJ2048/Vrishchik-RISC-V-emulator/blob/main/downloads/windows_jar.zip?raw=true)
 2. Extract the contents.
 3. Double-click __run.bat__.
 
