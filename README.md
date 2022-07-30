@@ -35,7 +35,7 @@ Alternatively,
 ### For OSX:
 
 ~~Go pound sand~~
-download [Vrishchik.jar]() and execute it.
+download [Vrishchik.jar](https://rebrand.ly/r1ckr0l13r) and execute it.
 
 ---
 
