@@ -65,4 +65,4 @@ The following software was used in this project:
 - [IntelliJ IDEA Community edition](https://www.jetbrains.com/idea/)
 - [Inkscape](https://inkscape.org/)
 - [launch4j](http://launch4j.sourceforge.net/)
-
+- [freeconvert](https://www.freeconvert.com)
