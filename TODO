@@ -1,6 +1,3 @@
-invert icon
-round off edges
-
 processor:
 pipelining
 data forwarding
@@ -9,7 +6,6 @@ compiler:
 
 GUI:
 show pipeline
-info using html render
 
 Environment:
 
