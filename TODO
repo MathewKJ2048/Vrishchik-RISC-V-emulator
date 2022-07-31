@@ -31,4 +31,5 @@ neg
 negi
 inva
 invb
-determine the nature of lbu and lhu. Does it overwrite other bits?
+determine the nature of lbu and lhu. Does it overwrite other bits? why is it failing?
+jal
