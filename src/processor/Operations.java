@@ -125,8 +125,6 @@ class Operations{
         EXE_BUFF.arr[1] = IDRF_BUFF.arr[1];
         EXE_BUFF.arr[2] = IDRF_BUFF.arr[2];
         EXE_BUFF.arr[3] = IDRF_BUFF.arr[3];
-        System.out.println("op is:"+op);
-        System.out.println("S is:"+S);
         if (op == 0) {
             EXE_BUFF.exe1 = rs1 + rs2;
             //D.R[IDRF_BUFF[1]]=rs1+rs2;
@@ -323,26 +321,37 @@ class Operations{
         } else if (op == 18) {
             MEM_BUFF.mem1 = EXE_BUFF.exe1;
         } else if (op == 19) {
-            if (D.Mem[EXE_BUFF.exe1] > 0) {
+            //System.out.println("lb");
+            /*if (D.Mem[EXE_BUFF.exe1] > 0) {
                 MEM_BUFF.mem1 = D.Mem[EXE_BUFF.exe1];
                 //D.R[IDRF_BUFF[1]] = D.Mem[EXE_BUFF];
             } else {
                 MEM_BUFF.mem1 = D.Mem[EXE_BUFF.exe1];
                 MEM_BUFF.mem1 = -MEM_BUFF.mem1;
-            }
+            }*/
+            //MEM_BUFF.mem1 = D.Mem[EXE_BUFF.exe1]>0?D.Mem[EXE_BUFF.exe1]:-D.Mem[EXE_BUFF.exe1];
+            MEM_BUFF.mem1 = D.Mem[EXE_BUFF.exe1];
+            //System.out.println(EXE_BUFF.exe1);
+            //System.out.println(D.Mem[EXE_BUFF.exe1]);
 
         } else if (op == 20) {
+            /*
+            System.out.println("lh");
             if (D.Mem[EXE_BUFF.exe1] > 0) {
                 MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 8 | D.Mem[EXE_BUFF.exe1 + 1] & 0xFF;
             } else {
                 MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 8 | D.Mem[EXE_BUFF.exe1 + 1] & 0xFF;
                 MEM_BUFF.mem1 = -MEM_BUFF.mem1;
-            }
+            }*/
+            MEM_BUFF.mem1 = D.Mem[EXE_BUFF.exe1]<<8 | D.Mem[EXE_BUFF.exe1+1]&0xFF;
 
         } else if (op == 21) {
+            System.out.println("lw");
             MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24 | (D.Mem[EXE_BUFF.exe1 + 1] & 0xFF) << 16 | (D.Mem[EXE_BUFF.exe1 + 2] & 0xFF) << 8 | D.Mem[EXE_BUFF.exe1 + 3] & 0xFF;
 
         } else if (op == 22) {
+            System.out.println("lbu");
+            /*
             if (D.Mem[EXE_BUFF.exe1] > 0) {
                 MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24;
                 //D.R[IDRF_BUFF[1]] = D.Mem[EXE_BUFF];
@@ -350,14 +359,19 @@ class Operations{
                 MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24;
                 MEM_BUFF.mem1 = -MEM_BUFF.mem1;
             }
+             */
+            MEM_BUFF.mem1=D.Mem[EXE_BUFF.exe1] & 0xFF;
 
         } else if (op == 23) {
+            /*
+            System.out.println("lhu");
             if (D.Mem[EXE_BUFF.exe1] > 0) {
                 MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24 | (D.Mem[EXE_BUFF.exe1 + 1] & 0xFF)<<16;
             } else {
                 MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1] & 0xFF) << 24 | (D.Mem[EXE_BUFF.exe1 + 1] & 0xFF)<<16;
                 MEM_BUFF.mem1 = -MEM_BUFF.mem1;
-            }
+            }*/
+            MEM_BUFF.mem1 = (D.Mem[EXE_BUFF.exe1]<<8 | D.Mem[EXE_BUFF.exe1+1]&0xFF)&0xFFFF;
 
         } else if (op == 24) {
             D.Mem[EXE_BUFF.exe1] = (byte) rs2;
