@@ -2,6 +2,7 @@
 
 import compiler.Binary;
 import compiler.Decompiler;
+import compiler.Syntax;
 import processor.Processor;
 
 import org.json.simple.JSONObject;
@@ -113,7 +114,10 @@ public class GUI_RISCV extends JFrame
             {
                 file_type = (String)obj.get(FILE_TYPE_JSON_KEY); // this does not require verification
                 Path default_directory_path = Paths.get((String)obj.get(DEFAULT_DIRECTORY_PATH_JSON_KEY));
-                if(!(Files.isDirectory(default_directory_path) && Files.isWritable(default_directory_path)))throw new Exception("Invalid path for default directory");
+                if(!(Files.isDirectory(default_directory_path) && Files.isWritable(default_directory_path)))
+                {
+                    if(!default_directory_path.toString().equals(""))throw new Exception("Invalid path for default directory");
+                }
                 default_directory = default_directory_path.toFile();
                 String laf = (String)obj.get(LAF_JSON_KEY);
                 if(LOOK_AND_FEEL.containsKey(laf))look_and_feel=laf;
@@ -121,7 +125,6 @@ public class GUI_RISCV extends JFrame
                 {
                     look_and_feel = "Default";
                     throw new Exception("look and feel not rcognized, using default look and feel");
-
                 }
                 int FontSize = (int)((long)obj.get(FONT_SIZE_JSON_KEY));
                 ConsoleFont = ConsoleFont.deriveFont((float)(FontSize));
@@ -141,11 +144,10 @@ public class GUI_RISCV extends JFrame
     {
         int base = Integer.parseInt(compilerBaseComboBox.getSelectedItem().toString());
         StringBuilder b = new StringBuilder();
-        b.append("\n");
+        b.append("1\t|"+Syntax.CODE.words[0]+"\n");
         for(int i=1;i<code.size();i++)
         {
-            int PC = 4*(i-1);
-            b.append(Binary.convert(PC,true,base,32,false)+"\t|"+code.get(i)+"\n");
+            b.append(Binary.convert(i+1,true,base,32,false)+"\t|"+code.get(i)+"\n");
         }
         compileDecompileTextArea.setText(b.toString());
     }
@@ -399,7 +401,8 @@ public class GUI_RISCV extends JFrame
                 }
                 JOptionPane.showMessageDialog(compileTab,compilation_source_file.getName()+" has been successfully compiled","Compilation Successful",JOptionPane.INFORMATION_MESSAGE);
                 CreateBinaryButton.setEnabled(true);
-                if(JOptionPane.showConfirmDialog(compileTab,"Would you like to create a binary file")!=JOptionPane.YES_OPTION)return;
+                compilerBaseComboBox.setEnabled(true);
+                if(JOptionPane.showConfirmDialog(compileTab,"Would you like to create a binary file?")!=JOptionPane.YES_OPTION)return;
                 try
                 {
                     String name = compilation_source_file.getName();
@@ -451,6 +454,8 @@ public class GUI_RISCV extends JFrame
                     breakpointTextField.setEditable(true);
                     enterButton.setEnabled(true);
                     inputTextArea.setEditable(true);
+                    codeBaseComboBox.setEnabled(true);
+                    saveButton.setEnabled(true);
                     ExecutionThread et = new ExecutionThread();
                     et.start();
                 }
@@ -497,6 +502,8 @@ public class GUI_RISCV extends JFrame
             binaryTextArea.setText("");
             transcriptTextArea.setText("");
             labelsTextArea.setText("");
+            compileDecompileTextArea.setText("");
+            compilerBaseComboBox.setEnabled(false);
             compileButton.setEnabled(false);
             CreateBinaryButton.setEnabled(false);
             compileLoadButton.setEnabled(true);
@@ -568,8 +575,10 @@ public class GUI_RISCV extends JFrame
             executeStepButton.setEnabled(false);
             executeAllButton.setEnabled(false);
             enterButton.setEnabled(false);
-            inputTextArea.setText("");
             inputTextArea.setEditable(false);
+            inputTextArea.setText("Enter input here");
+            saveButton.setEnabled(false);
+            codeBaseComboBox.setEnabled(false);
             setButton.setEnabled(false);
             removeButton.setEnabled(false);
             removeAllButton.setEnabled(false);
@@ -578,6 +587,9 @@ public class GUI_RISCV extends JFrame
             breakpointTextField.setEditable(false);
             executeLoadButton.setEnabled(true);
             dataForwardingRadioButton.setEnabled(true);
+            breakpointTextField.setText("");
+            breakpointMessageLabel.setText("");
+            breakpoints = new ArrayList<>();
             processor.Processor.reset_instruction();
             processor.Processor.reset_registers();
             processor.Processor.reset_memory();
@@ -693,18 +705,37 @@ public class GUI_RISCV extends JFrame
             breakpointMessageLabel.setText("all breakpoints removed");
             set_execution_code();
         });
+
         inputTextArea.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 super.focusGained(e);
                 inputTextArea.setText("");
             }
-            @Override
-            public void focusLost(FocusEvent e)
+
+        });
+
+        saveButton.addActionListener(e -> {
+            String name = execution_source_file.getName();
+            name = name.substring(0,name.indexOf("."))+" decompiled."+filetypeTextField.getText();
+            Path p = Paths.get(default_directory.getAbsolutePath()+"/"+name);
+            if(p.toFile().exists())
             {
-                super.focusLost(e);
-                inputTextArea.setText("Enter input here");
+                if(JOptionPane.showConfirmDialog(mainPanel,name+" already exists. Would you like to overwrite?")!=JOptionPane.YES_OPTION)return;
             }
+            StringBuilder b = new StringBuilder("");
+            b.append(Syntax.CODE.words[0]);
+            for(String s:decompiled_binary) b.append("\n").append(s);
+            try
+            {
+                Files.writeString(p,b.toString());
+            }
+            catch(Exception ex)
+            {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(mainPanel,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+            }
+            JOptionPane.showMessageDialog(mainPanel,"The decompiled code has been saved to "+name+"\nin "+default_directory.getAbsolutePath());
         });
         doNotClickButton.addActionListener(new ActionListener() {
             int ct = -1;
@@ -772,6 +803,7 @@ public class GUI_RISCV extends JFrame
                 doNotClickButton.setText(messages[ct]);
             }
         });
+
     }
     private JFrame main = this;
     private static String file_type = "s";
@@ -786,11 +818,11 @@ public class GUI_RISCV extends JFrame
     {
         return look_and_feel;
     }
-    private File compilation_source_file = null;
-    private byte[] compilation_binary = null;
-    private File execution_source_file = null;
-    private byte[] execution_binary = null;
-    private List<String> decompiled_binary = null;
+    private File compilation_source_file = null; // source file for compiler, is a .s file
+    private byte[] compilation_binary = null;    // output of compiler
+    private File execution_source_file = null;   // source file for processor, is a .bin file
+    private byte[] execution_binary = null;      // holds the contents of teh .bin file given to processor
+    private List<String> decompiled_binary = null;  // holds the decompiled version of the .bin file given to processor
     private String registersFormat;
     private String memoryFormat;
     private String memorySize;
@@ -884,7 +916,7 @@ public class GUI_RISCV extends JFrame
     private JEditorPane creditsEditorPane;
     private JButton doNotClickButton;
     private JEditorPane manualEditorPane;
-    private JButton filetypeChangeButton;
+    private JButton saveButton;
     private List<Integer> breakpoints = new ArrayList<>();
 
     private static void set_styles(StyleSheet styleSheet)
