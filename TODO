@@ -5,6 +5,7 @@ data forwarding
 compiler:
 
 GUI:
+TTF - true type font to solve font issue - consolas not being displayed by default
 show pipeline
 
 Environment:
