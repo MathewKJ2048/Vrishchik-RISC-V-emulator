@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class Syntax
 {
     //keywords
-    static class Keyword
+    public static class Keyword
     {
         public String[] words;
         public Keyword(String[] w)
@@ -151,7 +151,7 @@ public class Syntax
     public static final Keyword JR = new Keyword(new String[]{"jr"});
     public static final Keyword RET = new Keyword(new String[]{"ret"});
     public static final Keyword NOP = new Keyword(new String[]{"nop"});
-    public static final Keyword BEQZ = new Keyword(new String[]{"beq"});
+    public static final Keyword BEQZ = new Keyword(new String[]{"beqz"});
     public static final Keyword BNEZ = new Keyword(new String[]{"bnez"});
     public static final Keyword BLTZ = new Keyword(new String[]{"bltz"});
     public static final Keyword BGTZ = new Keyword(new String[]{"bgtz"});

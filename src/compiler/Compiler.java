@@ -225,7 +225,7 @@ public class Compiler
         process_data(transcript.compilation);
         process_code(transcript.compilation);
 
-        transcript.binary.append("\nPC\t|              code              |\tpurpose");
+        transcript.binary.append("\nPC\t|              Code              |\tPurpose");
 
         for (Instruction instruction : l_pc) {
             transcript.binary.append("\n").append(instruction.address).append("\t|").append(instruction.contents).append("|\t").append(instruction.comment);
@@ -1074,7 +1074,6 @@ public class Compiler
                             {
                                 immediate = process_immediate(arg1,sc,transcript);
                             }
-                            System.out.println(immediate-code_current);
                             l_pc.add(new Instruction(Binary.jal(dest_add,immediate-code_current), code_current,Syntax.JAL.words[0]));
                         }
                         catch(Exception e)
