@@ -29,7 +29,6 @@ An open-source RISC-V emulator written in java, using the swing framework.
 ## Installation:
 
 Java 17 is required to run Vrishchik. A headless JRE is unsuitable since swing is used in the GUI.
-Note that config.json will initially be flagged as corrupted. Vrishchik automatically corrects this issue after being opened the first time.
 
 ### For Linux:
 
