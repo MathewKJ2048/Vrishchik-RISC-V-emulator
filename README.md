@@ -15,16 +15,16 @@ An open-source RISC-V emulator written in java, using the swing framework.
 - decompiled code preview
 - points out line number and nature of error
 
-Processer:
+### Processer:
 - step execution
 - breakpoints
 - execution in independent threads to prevent crashes
 
-GUI:
-11) inbuilt console
-12) support for 2,8,10,16 bases, signed and unsigned, ASCII
-13) customizeable look and feel
-14) customizeable font size
+### GUI:
+- inbuilt console
+- support for 2,8,10,16 bases, signed and unsigned, ASCII
+- customizeable look and feel
+- customizeable font size
 
 ## Installation:
 
