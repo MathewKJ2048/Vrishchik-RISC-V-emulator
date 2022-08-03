@@ -27,7 +27,7 @@
         <tr>
             <td>add R1, R2, R3</td>
             <td>R1 = R2 + R3</td>
-            <td>adds the vaues stored in two registers</td>
+            <td>adds the values stored in two registers</td>
         </tr>
         <tr>
             <td>sub R1, R2, R3</td>
@@ -187,23 +187,23 @@
         </tr>
         <tr>
             <td>lh R1, imm(R2)</td>
-            <td></td>
-            <td>loads a half from the memory location to the first register</td>
+            <td>R1 = memory[R2+imm+1:R2+imm]</td>
+            <td>loads a half from the memory location to the first register with sign extension</td>
         </tr>
         <tr>
             <td>lb R1, imm(R2)</td>
-            <td></td>
-            <td>loads a byte from the memory location to the first register</td>
+            <td>R1 = memory[R2+imm]</td>
+            <td>loads a byte from the memory location to a register with sign extension</td>
         </tr>
         <tr>
             <td>lhu R1, imm(R2)</td>
-            <td></td>
-            <td></td>
+            <td>R1 = memory[R2+imm+1:R2+imm] & 0xFFFF</td>
+            <td>loads a half from the memory location to a register with 0 extension</td>
         </tr>
         <tr>
             <td>lbu R1, imm(R2)</td>
-            <td></td>
-            <td></td>
+            <td>R1 = memory[R2+imm] & 0xFF</td>
+            <td>loads a byte from the memory location to a register with 0 extension</td>
         </tr>
         <tr>
             <td>sw R1, imm(R2)</td>
@@ -327,19 +327,24 @@
             <td>jumps to the instruction memory address represented by the value stored in a register</td>
         </tr>
         <tr>
-            <td>jal</td>
-            <td></td>
-            <td></td>
+            <td>jal R1, imm</td>
+            <td>R1 = PC+4<br>PC = imm</td>
+            <td>sets the value of a register to PC+4 and jumps to the instruction memory address represented by an immediate value</td>
+        </tr>
+        <tr>
+            <td>jal imm</td>
+            <td>PC = imm</td>
+            <td>sets the value of the return address register x5 to PC+4 and jumps to the instruction memory address represented by imm</td>
         </tr>
         <tr>
             <td>jalr R1</td>
-            <td>PC = R1<br>$ra = PC + 4</td>
-            <td>jumps to the instruction memory address represented by the value stored in a register and sets the value of the return address register equal to PC+4</td>
+            <td>$ra = PC + 4<br>PC = R1</td>
+            <td>sets the value of the return address register x5 to PC+4 and jumps to the instruction memory address represented by the value stored in a register</td>
         </tr>
         <tr>
             <td>jalr R1, imm(R2)</td>
-            <td></td>
-            <td></td>
+            <td>R1 = PC + 4<br>PC = R2+imm</td>
+            <td>sets the value of a register to PC+4 and jumps to the instruction memory address represented by an immediate value</td>
         </tr>
         <tr>
             <td>ret</td>
@@ -448,27 +453,5 @@
             <td>no operation</td>
         </tr>
     </table>
-
-
-
-
-    base commands:
-J jal
-U lui,auipc
-B beq,bne,blt,bge,bltu,bgeu
-R add,sub,and,or,xor,sll,srl,sra,slt,sltu
-I jalr,lb,lh,lw,lbu,lhu,addi,slti,sltiu,xori,ori,andi,slli,slri,srai
-S sb,sh,sw
-
-input types:
-r1,i(r2): (lbu lhu) (jalr - true)
-r,i: (jal - true)
-i:  (jal - pseudo)
-r: (jalr - pseudo)
-
-
-
-//i can be offset or code label or data label
-//jal and jalr have two meanings
 </body>
 </html>

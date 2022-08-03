@@ -74,11 +74,17 @@ The ecall code is stored in <b>$a2</b><br>
         <td>$a0 stores start memory address,<br>$a1 atores the base to print the value in,<br>$a3 is 0 if the value is to be treated as signed and not 0 otherwise</td>
         <td>none</td>
     </tr>
-
+    <tr>
+        <td>9</td>
+        <td>print string</td>
+        <td>$a0 stores the start memory address,<br>$a1 stores the length of the string to be printed</td>
+        <td>none</td>
+    </tr>
 
 </table>
 <p>
 If the argument for base is 0, base ten is assumed by default.
+If the length of the string to be printed is -1, the characters are printed till the null character is reached.
 <br>
 <br>
 </p>
