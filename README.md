@@ -3,7 +3,26 @@ An open-source RISC-V emulator written in java, using the swing framework.
 
 
 ## Features:
+1) independent compiler and processor with generation of standard binary files
+2) all 32 basic commands of RISC
+3) additional pseudo commands
 
+Compiler:
+4) transcript of step-by-step compilation
+5) binary file preview
+6) decompiled code preview
+7) points out line number and nature of error
+
+Processer:
+8) step execution
+9) breakpoints
+10) execution in independent threads to prevent crashes
+
+GUI:
+11) inbuilt console
+12) support for 2,8,10,16 bases, signed and unsigned, ASCII
+13) customizeable look and feel
+14) customizeable font size
 
 ## Installation:
 
