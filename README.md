@@ -65,7 +65,6 @@ Screenshots:
 
 The following people were involved in this project:
 
-- Supervision - [Dr Raghavendra Kanakagiri](https://scholar.google.com/citations?user=7udEeZcAAAAJ&hl=en)
 - Compiler - [Mathew K J](https://github.com/MathewKJ2048)
 - Virtual Processor - [V Bharadwaj](https://github.com/Bharadwaj1720)
 - Pipelining - [V Bharadwaj](https://github.com/Bharadwaj1720)
