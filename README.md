@@ -50,10 +50,6 @@ Alternatively,
 2. Extract the contents.
 3. Double-click __run.bat__.
 
-### For OSX:
-
-~~Go pound sand~~
-download [Vrishchik.jar](https://rebrand.ly/r1ckr0l13r) and execute it.
 
 ---
 
